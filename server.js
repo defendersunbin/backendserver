@@ -1,4 +1,3 @@
-
 const express = require('express')
 const ejs = require('ejs')
 const app = express()
@@ -47,10 +46,6 @@ app.get('/', (req, res) => {
 
 app.get('/profile', (req, res) => {
    res.render('profile')
-})
-
-app.get('/map', (req, res) => {
-   res.render('map')
 })
 
 app.get('/contact', (req, res) => {
@@ -137,9 +132,91 @@ app.get('/logout', (req, res) => {
    req.session.member = null;
    res.send("<script> alert('로그아웃 되었습니다.'); location.href='/';</script>");
 
+})
+
+app.get('/register', (req, res) => {
+   res.render('register')
+})
+
+
+app.post('/register', (req, res) => {
+   const user_id = req.body.user_id;
+   const pw = req.body.pw;
+   const name = req.body.name;
+
+   var checkDuplicateSql = `SELECT * FROM member WHERE user_id = ? OR name = ?`;
+   var checkDuplicateValues = [user_id, name];
+
+   connection.query(checkDuplicateSql, checkDuplicateValues, function (err, result) {
+      if (err) throw err;
+
+      if (result.length > 0) {
+         res.send("<script> alert('이미 사용중인 회원입니다.'); location.href='/register';</script>");
+      } else {
+         var sql = `INSERT INTO member (user_id, pw, name) VALUES (?, ?, ?)`;
+         var values = [user_id, pw, name];
+
+         connection.query(sql, values, function (err, result) {
+            if (err) throw err;
+
+            console.log('회원가입이 완료되었습니다.');
+            res.send("<script> alert('회원가입이 완료되었습니다.'); location.href='/login';</script>");
+         });
+      }
+   });
+});
+
+
+
+app.get('/addfavorite', (req, res) => {
+    res.render('addfavorite');
+})
+
+
+app.post('/addfavoriteProc', (req, res) => {
+   const title = req.body.title;
+   const code = req.body.code;
+
+   var sql = `insert into favorites(title, code)
+   values(?,?)`
+
+   var values = [title, code];
+
+   connection.query(sql, values, function (err, result){
+       if(err) throw err;
+       console.log('즐겨찾기 추가');
+       res.send("<script> alert('즐겨찾기에 추가하였습니다.'); location.href='/';</script>");
+   })
 
 })
 
+app.get('/addfavoriteDelete', (req, res) => {
+   var idx = req.query.idx
+   var sql = `delete from favorites where idx='${idx}' `
+   connection.query(sql, function (err, result){
+      if(err) throw err;
+
+      res.send("<script> alert('즐겨찾기에서 삭제되었습니다.'); location.href='/addfavoriteList';</script>");
+  })
+})
+
+app.get('/addfavoriteList', (req, res) => {
+
+   var sql = `select * from favorites order by idx desc `
+   connection.query(sql, function (err, results, fields){
+      if(err) throw err;
+      res.render('addfavoriteList',{lists:results})
+   })
+
+})
+
+app.get('/stocks', (req, res) => {
+    res.render('stocks');
+})
+
+app.post('/stocks', (req, res) => {
+    res.render('stocks');
+})
 
 app.listen(port, () => {
   console.log(`서버가 실행되었습니다. 접속주소 : http://localhost:${port}`)
