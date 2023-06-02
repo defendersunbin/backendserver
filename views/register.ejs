@@ -1,0 +1,14 @@
+<%-include('header.ejs')%>
+
+<form action="/register" method="post" >
+    <ul>
+        <li> 회원가입 </li>
+         <li> 아이디 : <input type="text" name="user_id"  required ></li>
+         <li> 비밀번호 : <input type="password" name="pw" required></li>
+         <li> 이름 : <input type="text" name="name" required ></li>
+
+        <button>회원가입</button>
+    </ul>
+</form>
+
+<%-include('footer.ejs')%>

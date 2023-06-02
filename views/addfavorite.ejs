@@ -1,0 +1,24 @@
+<%-include('header.ejs')%>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>즐겨찾기</title>
+    <link rel="stylesheet" type="text/css" href="/styles.css">
+</head>
+<body>
+    <h1>Add Favorite</h1>
+    <form action="/addfavoriteProc" method="POST">
+        <label for="title">주식종목:</label>
+        <input type="text" id="title" name="title" required><br><br>
+        <label for="url">주식코드:</label>
+        <input type="text" id="code" name="code" required><br><br>
+        <input type="submit" value="Add Favorite">
+    </form>
+    <br>
+    <a href="/">이전</a>
+</body>
+</html>
+
+<%-include('footer.ejs')%>

@@ -1,0 +1,60 @@
+<%- include('header.ejs') %>
+
+<script>
+    // 실시간 주가 검색 함수
+    function searchStockPrice() {
+        var xhr = new XMLHttpRequest();
+        /* 국내주식 시세 조회 */
+        var url = 'https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/inquire-price';
+        xhr.open('post', url);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('authorization', 'Bearer {TOKEN}');
+        xhr.setRequestHeader('appKey', '{Client_ID}');
+        xhr.setRequestHeader('appSecret', '{Client_Secret}');
+        xhr.setRequestHeader('personalSeckey', '{personalSeckey}');
+        xhr.setRequestHeader('tr_id', 'FHKST01010100');
+        xhr.setRequestHeader('tr_cont', '');
+        xhr.setRequestHeader('custtype', '법인(B), 개인(P)');
+        xhr.setRequestHeader('seq_no', '법인(01), 개인( )');
+        xhr.setRequestHeader('mac_address', '{Mac_address}');
+        xhr.setRequestHeader('phone_num', 'P01011112222');
+        xhr.setRequestHeader('ip_addr', '{IP_addr}');
+        xhr.setRequestHeader('hashkey', '{Hash값}');
+        xhr.setRequestHeader('gt_uid', '{Global UID}');
+        xhr.onreadystatechange = function () {
+            if (this.readyState == 4) {
+                console.log('Status : ' + this.status + '\nHeaders:' + JSON.stringify(this.getAllResponseHeaders()) + '\nBody :' + this.responseText);
+                // 여기서 주가 데이터를 처리하고 화면에 표시하는 코드를 작성하세요.
+                if (this.status == 200) {
+                    // 주가 데이터를 JSON으로 파싱
+                    var response = JSON.parse(this.responseText);
+
+                    // 주가 정보 추출
+                    var stockPrice = response.stock_price;
+                    var stockName = response.stock_name;
+                    var stockCode = response.stock_code;
+
+                    // 화면에 주가 정보 표시
+                    var stockInfo = document.getElementById('stockInfo');
+                    stockInfo.innerHTML = '주가 정보<br>' +
+                        '종목명: ' + stockName + '<br>' +
+                        '종목코드: ' + stockCode + '<br>' +
+                        '현재가: ' + stockPrice;
+                }
+            }
+        };
+        xhr.send('{\n' +
+            '    "fid_cond_mrkt_div_code": "FID조건시장분류코드",\n' +
+            '    "fid_input_iscd": "FID입력종목코드"\n' +
+        '}');
+    }
+
+    // 검색 버튼 클릭 시 실시간 주가 검색 함수 호출
+    document.getElementById('searchButton').addEventListener('click', function () {
+        searchStockPrice();
+    });
+</script>
+
+<div id="stockInfo"></div>
+
+<%- include('footer.ejs') %>
