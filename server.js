@@ -1,7 +1,8 @@
 const express = require('express')
 const ejs = require('ejs')
 const app = express()
-const port = 3000
+// 환경변수에서 온 PORT 값을 받기
+const port = process.env.PORT;
 var bodyParser = require('body-parser')
 var session = require('express-session')
 
