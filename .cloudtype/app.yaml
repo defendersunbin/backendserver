@@ -1,0 +1,9 @@
+name: node
+app: node@20
+options:
+  env:
+    - name: NODE_ENV
+      value: production
+  install: npm ci --production
+  ports: 3000/http
+  start: npm start

@@ -1,0 +1,15 @@
+<%- include('header.ejs') %>
+
+<h1>홈페이지에 오신걸 환영합니다.</h1>
+
+<form action="/findname" method="POST">
+  <label for="user_id">사용자 아이디:</label>
+  <input type="text" id="user_id" name="user_id" required>
+
+  <label for="pw">비밀번호:</label>
+  <input type="password" id="pw" name="pw" required>
+
+  <button type="submit">회원 정보 검색</button>
+</form>
+
+<%- include('footer.ejs') %>
