@@ -265,31 +265,47 @@ app.get('/stocks', (req, res) => {
 });
 
 app.post('/getStockInfo', async (req, res) => {
-    const stockCode = req.body.stockCode;
     const stockName = req.body.stockName;
 
-    const url = `https://finance.naver.com/item/main.nhn?code=${stockCode}`;
+    // MySQL에서 종목 코드 조회
+    const query = 'SELECT stockCode FROM stocks WHERE stockName = ?';
+    connection.query(query, [stockName], async (err, results) => {
+        if (err) {
+            console.error('종목 코드 조회 중 오류 발생:', err);
+            res.render('stocks', { stockInfo: null });
+            return;
+        }
 
-    try {
-        const response = await axios.get(url);
-        const $ = cheerio.load(response.data);
+        if (results.length === 0) {
+            console.log('해당 종목 이름을 가진 종목을 찾을 수 없습니다.');
+            res.render('stocks', { stockInfo: null });
+            return;
+        }
 
-        const currentPrice = $('#chart_area > div.rate_info > div > p.no_today > em').text();
-        const change = $('#chart_area > div.rate_info > div > p.no_exday > em > span.blind').text();
-        const changePercentage = $('#chart_area > div.rate_info > div > p.no_exday > em > span.blind').next().text();
+        const stockCode = results[0].stockCode;
+        const url = `https://finance.naver.com/item/main.nhn?code=${stockCode}`;
 
-        const stockInfo = {
-            stockName: stockName,
-            currentPrice: currentPrice,
-            change: change,
-            changePercentage: changePercentage
-        };
+        try {
+            const response = await axios.get(url);
+            const $ = cheerio.load(response.data);
 
-        res.render('stocks', { stockInfo: stockInfo });
-    } catch (error) {
-        console.error('주식 데이터를 가져오는 중 오류 발생:', error);
-        res.render('stocks', { stockInfo: null });
-    }
+            const currentPrice = $('#chart_area > div.rate_info > div > p.no_today > em').text();
+            const change = $('#chart_area > div.rate_info > div > p.no_exday > em > span.blind').text();
+            const changePercentage = $('#chart_area > div.rate_info > div > p.no_exday > em > span.blind').next().text();
+
+            const stockInfo = {
+                stockName: stockName,
+                currentPrice: currentPrice,
+                change: change,
+                changePercentage: changePercentage
+            };
+
+            res.render('stocks', { stockInfo: stockInfo });
+        } catch (error) {
+            console.error('주식 데이터를 가져오는 중 오류 발생:', error);
+            res.render('stocks', { stockInfo: null });
+        }
+    });
 });
 
 app.listen(port, () => {

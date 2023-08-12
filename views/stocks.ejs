@@ -10,20 +10,24 @@
     <title>Stock Information</title>
 </head>
 <body>
-<h1>주식 정보 조회</h1>
-<form action="/getStockInfo" method="POST">
-    <label for="stockCode">종목 코드:</label>
-    <input type="text" id="stockCode" name="stockCode" required><br><br>
-    <label for="stockName">종목 이름:</label>
-    <input type="text" id="stockName" name="stockName" required><br><br>
-    <button type="submit">조회</button>
+<h1>주가 종목 정보 조회</h1>
+<form action="/getStockInfo" method="post">
+    <label for="stockName">종목 검색:</label>
+    <input type="text" id="stockName" name="stockName" required>
+    <button type="submit">종목 가져오기</button>
 </form>
+
 <% if (stockInfo) { %>
-    <h2><%= stockInfo.stockName %> 현재가: <%= stockInfo.currentPrice %></h2>
-    <p>전일대비: <%= stockInfo.change %> (<%= stockInfo.changePercentage %>)</p>
+    <h2><%= stockInfo.stockName %></h2>
+    <p>현재 금액 (실시간): <%= stockInfo.currentPrice %>원</p>
+    <p>변화폭: <%= stockInfo.change %>원</p>
+    <p>변화율: <%= stockInfo.changePercentage %>%</p>
+<% } else { %>
+    <p>No stock information available.</p>
 <% } %>
 </body>
 </html>
+
 
 
 <%- include('footer.ejs') %>
