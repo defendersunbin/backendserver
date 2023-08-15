@@ -181,40 +181,41 @@ app.get('/register', (req, res) => {
 
 
 app.post('/register', (req, res) => {
-   console.log('함수 추가되었음', (req, res));
-   const user_id = req.body.user_id;
-   const pw = req.body.pw;
-   const name = req.body.name;
+    console.log('함수 추가되었음', (req, res));
+    const user_id = req.body.user_id;
+    const pw = req.body.pw;
+    const name = req.body.name;
 
-   console.log("user_id:", user_id);
-   console.log("pw:", pw);
-   console.log("name:", name);
+    console.log("user_id:", user_id);
+    console.log("pw:", pw);
+    console.log("name:", name);
 
-   if (pw.length < 8 || pw.length > 20) {
-      res.send("<script> alert('비밀번호는 최소 8자리, 최대 20자리까지 설정해주세요.'); location.href='/register';</script>");
-   } else {
-      var checkDuplicateSql = `SELECT * FROM member WHERE user_id = ? OR name = ?`;
-      var checkDuplicateValues = [user_id, name];
+    if (pw.length < 8 || pw.length > 20) {
+        res.send("<script> alert('비밀번호는 최소 8자리, 최대 20자리까지 설정해주세요.'); location.href='/register';</script>");
+    } else {
+        var checkDuplicateSql = `SELECT * FROM member WHERE user_id = ? OR name = ?`;
+        var checkDuplicateValues = [user_id, name];
 
-      connection.query(checkDuplicateSql, checkDuplicateValues, function (err, result) {
-         if (err) throw err;
+        connection.query(checkDuplicateSql, checkDuplicateValues, function (err, result) {
+            if (err) throw err;
 
-         if (result.length > 0) {
-            res.send("<script> alert('이미 사용중인 회원입니다.'); location.href='/register';</script>");
-         } else {
-            var sql = `INSERT INTO member (user_id, pw, name) VALUES (?, ?, ?)`;
-            var values = [user_id, pw, name];
+            if (result.length > 0) {
+                res.send("<script> alert('이미 사용중인 회원입니다.'); location.href='/register';</script>");
+            } else {
+                var sql = `INSERT INTO member (user_id, pw, name) VALUES (?, ?, ?)`;
+                var values = [user_id, pw, name];
 
-            connection.query(sql, values, function (err, result) {
-               if (err) throw err;
+                connection.query(sql, values, function (err, result) {
+                    if (err) throw err;
 
-               console.log('회원가입이 완료되었습니다.');
-               res.send("<script> alert('회원가입이 완료되었습니다.'); location.href='/login';</script>");
-            });
-         }
-      });
-   }
+                    console.log('회원가입이 완료되었습니다.');
+                    res.send("<script> alert('회원가입이 완료되었습니다.'); location.href='/login';</script>");
+                });
+            }
+        });
+    }
 });
+
 
 app.get('/addfavorite', (req, res) => {
     res.render('addfavorite');
