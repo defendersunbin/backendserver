@@ -1,12 +1,16 @@
 const express = require('express')
 const ejs = require('ejs')
 const app = express()
+// 환경변수에서 온 PORT 값을 받기
+const port = 3000;
+const bodyParser = require('body-parser')
 //새로 추가
 const axios = require('axios');
 const cheerio = require('cheerio');
-// 환경변수에서 온 PORT 값을 받기
-const port = 3000;
-var bodyParser = require('body-parser')
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
+const jwt = require('jsonwebtoken');
+const secretKey = 'tIMEiSwATCH2023!!';
 var session = require('express-session')
 
 require('dotenv').config()
@@ -96,37 +100,43 @@ app.get('/login', (req, res) => {
 })
 
 
-app.post('/loginProc', (req, res) => {
+app.post('/loginProc', async (req, res) => {
     const user_id = req.body.user_id;
-    const pw = req.body.pw;
+    const enteredPassword = req.body.pw;
 
-    console.log("user_id:", user_id);
-    console.log("pw:", pw);
+    var sql = `SELECT * FROM member WHERE user_id = ?`;
+    var values = [user_id];
 
-    var sql = `SELECT * FROM member WHERE user_id = ? AND pw=?`
+    connection.query(sql, values, async function (err, result) {
+        if (err) throw err;
 
-    var values = [user_id, pw];
+        if (result.length == 0) {
+            res.send("<script> alert('존재하지 않는 아이디입니다.'); location.href='/login';</script>");
+        } else {
+            const storedHash = result[0].pw;
+            const passwordMatches = await bcrypt.compare(enteredPassword, storedHash);
 
-    connection.query(sql, values, function (err, result){
-        if(err) throw err;
+            if (passwordMatches) {
+                const token = jwt.sign({ user_id }, secretKey, {
+                    expiresIn: '1h',
+                });
 
-        if(result.length==0){
-            res.send("<script> alert('존재하지 않는 아이디입니다..'); location.href='/login';</script>");
-        }else{
-            console.log(result[0]);
+                res.cookie('token', token, { httpOnly: true });
 
-            req.session.member = result[0]
-            res.send("<script> alert('로그인 되었습니다.'); location.href='/';</script>");
-            //res.send(result);
+                req.session.member = result[0];
+                res.send("<script> alert('로그인 되었습니다.'); location.href='/';</script>");
+            } else {
+                res.send("<script> alert('비밀번호가 일치하지 않습니다.'); location.href='/login';</script>");
+            }
         }
-    })
-})
+    });
+});
 
 app.get('/loginedit', (req, res) => {
     res.render('loginedit');
 })
 
-app.post('/logineditProc', (req, res) => {
+app.post('/logineditProc', async (req, res) => {
     const user_id = req.body.user_id;
     const old_pw = req.body.old_pw;
     const new_pw = req.body.new_pw;
@@ -136,29 +146,34 @@ app.post('/logineditProc', (req, res) => {
     console.log("new_pw:", new_pw);
 
     var sql = `SELECT * FROM member WHERE user_id = ?`
-
     var values = [user_id];
 
-    connection.query(sql, values, function (err, result){
-        if(err) throw err;
+    connection.query(sql, values, async function (err, result) {
+        if (err) throw err;
 
-        if(result.length == 0){
+        if (result.length == 0) {
             res.render('loginedit');
-        } else if (result[0].pw !== old_pw) {
-            res.send("<script> alert('이전 비밀번호가 일치하지 않습니다.'); location.href='/loginedit';</script>");
         } else {
-            var updateSql = `UPDATE member SET pw = ? WHERE user_id = ?`;
-            var updateValues = [new_pw, user_id];
+            const storedHash = result[0].pw;
+            const passwordMatches = await bcrypt.compare(old_pw, storedHash);
 
-            connection.query(updateSql, updateValues, function (err, result) {
-                if (err) throw err;
+            if (!passwordMatches) {
+                res.send("<script> alert('이전 비밀번호가 일치하지 않습니다.'); location.href='/loginedit';</script>");
+            } else {
+                const newHash = await bcrypt.hash(new_pw, saltRounds);
+                var updateSql = `UPDATE member SET pw = ? WHERE user_id = ?`;
+                var updateValues = [newHash, user_id];
 
-                console.log('비밀번호가 수정되었습니다.');
-                res.send("<script> alert('비밀번호가 수정되었습니다.'); location.href='/';</script>");
-            });
+                connection.query(updateSql, updateValues, function (err, result) {
+                    if (err) throw err;
+
+                    console.log('비밀번호가 수정되었습니다.');
+                    res.send("<script> alert('비밀번호가 수정되었습니다.'); location.href='/';</script>");
+                });
+            }
         }
-    })
-})
+    });
+});
 
 
 app.get('/logout', (req, res) => {
@@ -174,14 +189,9 @@ app.get('/register', (req, res) => {
 
 
 app.post('/register', (req, res) => {
-    console.log('함수 추가되었음', (req, res));
     const user_id = req.body.user_id;
     const pw = req.body.pw;
     const name = req.body.name;
-
-    console.log("user_id:", user_id);
-    console.log("pw:", pw);
-    console.log("name:", name);
 
     if (pw.length < 8 || pw.length > 20) {
         res.send("<script> alert('비밀번호는 최소 8자리, 최대 20자리까지 설정해주세요.'); location.href='/register';</script>");
@@ -195,14 +205,25 @@ app.post('/register', (req, res) => {
             if (result.length > 0) {
                 res.send("<script> alert('이미 사용중인 회원입니다.'); location.href='/register';</script>");
             } else {
-                var sql = `INSERT INTO member (user_id, pw, name) VALUES (?, ?, ?)`;
-                var values = [user_id, pw, name];
-
-                connection.query(sql, values, function (err, result) {
+                bcrypt.hash(pw, saltRounds, function(err, hash) {
                     if (err) throw err;
 
-                    console.log('회원가입이 완료되었습니다.');
-                    res.send("<script> alert('회원가입이 완료되었습니다.'); location.href='/login';</script>");
+                    var sql = `INSERT INTO member (user_id, pw, name) VALUES (?, ?, ?)`;
+                    var values = [user_id, hash, name];
+
+                    connection.query(sql, values, function (err, result) {
+                        if (err) throw err;
+
+                        console.log('회원가입이 완료되었습니다.');
+
+                        const token = jwt.sign({ user_id }, secretKey, {
+                            expiresIn: '1h',
+                        });
+
+                        console.log('토큰:', token);
+
+                        res.send("<script> alert('회원가입이 완료되었습니다.'); location.href='/login';</script>");
+                    });
                 });
             }
         });
@@ -245,30 +266,39 @@ app.get('/addfavoriteDelete', (req, res) => {
 })
 
 app.get('/addfavoriteList', (req, res) => {
-    var sql = `SELECT * FROM favorites ORDER BY idx DESC `;
+
+    var sql = `select * from favorites order by idx desc `
     connection.query(sql, function (err, results, fields){
         if(err) throw err;
-        res.json(results);
-    });
-});
+        res.render('addfavoriteList',{lists:results})
+    })
+
+})
 
 app.get('/findname', (req, res) => {
     res.render('findname');
 })
 
-app.post('/findname', (req, res) => {
+app.post('/findname', async (req, res) => {
     const user_id = req.body.user_id;
     const pw = req.body.pw;
 
-    var findNameSql = `SELECT name FROM member WHERE user_id = ? AND pw = ?`;
-    var findNameValues = [user_id, pw];
+    var findNameSql = `SELECT * FROM member WHERE user_id = ?`;
+    var findNameValues = [user_id];
 
-    connection.query(findNameSql, findNameValues, function (err, result) {
+    connection.query(findNameSql, findNameValues, async function (err, result) {
         if (err) throw err;
 
         if (result.length > 0) {
-            const name = result[0].name;
-            res.send(`<script> alert('회원님의 이름은 ${name}입니다.'); location.href='/';</script>`);
+            const storedHash = result[0].pw;
+            const passwordMatches = await bcrypt.compare(pw, storedHash);
+
+            if (passwordMatches) {
+                const name = result[0].name;
+                res.send(`<script> alert('회원님의 이름은 ${name}입니다.'); location.href='/';</script>`);
+            } else {
+                res.send(`<script> alert('일치하는 회원 정보가 없습니다.'); location.href='/';</script>`);
+            }
         } else {
             res.send(`<script> alert('일치하는 회원 정보가 없습니다.'); location.href='/';</script>`);
         }
@@ -279,19 +309,63 @@ app.get('/logindeactivate', (req, res) => {
     res.render('logindeactivate');
 })
 
-app.post('/logindeactivate', (req, res) => {
+app.post('/logindeactivate', async (req, res) => {
     const { user_id, pw } = req.body;
 
     // 데이터베이스에서 사용자 찾기
-    const sql = 'DELETE FROM member WHERE user_id = ? AND pw = ?';
+    const sql = 'SELECT * FROM member WHERE user_id = ?';
 
-    connection.query(sql, [user_id, pw], (err, result) => {
+    connection.query(sql, [user_id], async (err, result) => {
         if (err) throw err;
 
-        if (result.affectedRows === 0) {
+        if (result.length === 0) {
             res.send("<script> alert('사용자 정보가 일치하지 않습니다.'); location.href='/logindeactivate';</script>");
         } else {
-            res.send("<script> alert('회원탈퇴가 완료되었습니다.'); location.href='/';</script>");
+            const storedHash = result[0].pw;
+            const passwordMatches = await bcrypt.compare(pw, storedHash);
+
+            if (!passwordMatches) {
+                res.send("<script> alert('사용자 정보가 일치하지 않습니다.'); location.href='/logindeactivate';</script>");
+            } else {
+                const deleteSql = 'DELETE FROM member WHERE user_id = ?';
+                connection.query(deleteSql, [user_id], (err, result) => {
+                    if (err) throw err;
+
+                    // 로그아웃 처리 - 세션을 초기화합니다.
+                    req.session.member = null;
+
+                    res.send("<script> alert('회원탈퇴가 완료되었습니다.'); location.href='/';</script>");
+                });
+            }
+        }
+    });
+});
+
+
+app.get('/findpw', (req, res) => {
+    res.render('findpw');
+});
+
+app.post('/findpw', async (req, res) => {
+    const user_id = req.body.user_id;
+    const user_name = req.body.name;
+
+    var sql = `SELECT * FROM member WHERE user_id = ?`;
+    var values = [user_id];
+
+    connection.query(sql, values, async function (err, result) {
+        if (err) throw err;
+
+        if (result.length == 0) {
+            res.send("<script> alert('존재하지 않는 아이디입니다.'); location.href='/findpw';</script>");
+        } else {
+            if (result[0].name === user_name) {
+                // 사용자가 비밀번호를 볼 수 있도록 수정
+                const storedPassword = result[0].pw;
+                res.send(`<script> alert('입력하신 사용자의 비밀번호는 ${storedPassword} 입니다.'); location.href='/login';</script>`);
+            } else {
+                res.send("<script> alert('이름이 일치하지 않습니다.'); location.href='/findpw';</script>");
+            }
         }
     });
 });
