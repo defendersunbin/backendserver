@@ -9,7 +9,6 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 var session = require('express-session')
 
-
 require('dotenv').config()
 
 const mysql = require('mysql2')
@@ -17,7 +16,6 @@ const connection = mysql.createConnection(process.env.DATABASE_URL)
 console.log('Connected to PlanetScale!')
 
 connection.query("SET time_zone='Asia/Seoul'");
-
 
 app.set('view engine','ejs')
 app.set('views','./views')
@@ -99,8 +97,6 @@ app.get('/contactList', (req, res) => {
 
 })
 
-
-
 app.get('/login', (req, res) => {
    res.render('login')
 })
@@ -132,8 +128,6 @@ app.post('/loginProc', (req, res) => {
    })
 
 })
-
-
 
 app.get('/logout', (req, res) => {
 

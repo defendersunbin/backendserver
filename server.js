@@ -4,12 +4,10 @@ const app = express()
 //새로 추가
 const axios = require('axios');
 const cheerio = require('cheerio');
-
 // 환경변수에서 온 PORT 값을 받기
 const port = 3000;
 var bodyParser = require('body-parser')
 var session = require('express-session')
-
 
 require('dotenv').config()
 
@@ -18,7 +16,6 @@ const connection = mysql.createConnection(process.env.DATABASE_URL)
 console.log('Connected to PlanetScale!')
 
 connection.query("SET time_zone='Asia/Seoul'");
-
 
 app.set('view engine','ejs')
 app.set('views','./views')
@@ -31,7 +28,6 @@ app.use(session({ secret: 'test', cookie: { maxAge: 60000 }, resave:true, saveUn
 
 app.use((req, res, next) => {
 
-
    res.locals.user_id = "";
    res.locals.name = "";
 
@@ -41,8 +37,6 @@ app.use((req, res, next) => {
    }
    next()
  })
-
-
 
 app.get('/', (req, res) => {
    console.log(req.session.member);
@@ -57,7 +51,6 @@ app.get('/profile', (req, res) => {
 app.get('/contact', (req, res) => {
    res.render('contact')
 })
-
 
 app.post('/contactProc', (req, res) => {
    const name = req.body.name;
@@ -75,9 +68,7 @@ app.post('/contactProc', (req, res) => {
        console.log('자료 1개를 삽입하였습니다.');
        res.send("<script> alert('문의사항이 등록되었습니다.'); location.href='/';</script>");
    })
-
 })
-
 
 app.get('/contactDelete', (req, res) => {
    var idx = req.query.idx
@@ -97,9 +88,7 @@ app.get('/contactList', (req, res) => {
       if(err) throw err;
       res.render('contactList',{lists:results})
    })
-
 })
-
 
 
 app.get('/login', (req, res) => {
@@ -108,29 +97,68 @@ app.get('/login', (req, res) => {
 
 
 app.post('/loginProc', (req, res) => {
-   const user_id = req.body.user_id;
-   const pw = req.body.pw;
+    const user_id = req.body.user_id;
+    const pw = req.body.pw;
 
-   var sql = `select * from member where user_id=? and pw=? `
+    console.log("user_id:", user_id);
+    console.log("pw:", pw);
 
-   var values = [user_id, pw];
+    var sql = `SELECT * FROM member WHERE user_id = ? AND pw=?`
 
-   connection.query(sql, values, function (err, result){
-       if(err) throw err;
+    var values = [user_id, pw];
 
-       if(result.length==0){
-         res.send("<script> alert('존재하지 않는 아이디입니다..'); location.href='/login';</script>");
-       }else{
-         console.log(result[0]);
+    connection.query(sql, values, function (err, result){
+        if(err) throw err;
 
-         req.session.member = result[0]
-         res.send("<script> alert('로그인 되었습니다.'); location.href='/';</script>");
-         //res.send(result);
-       }
-   })
+        if(result.length==0){
+            res.send("<script> alert('존재하지 않는 아이디입니다..'); location.href='/login';</script>");
+        }else{
+            console.log(result[0]);
 
+            req.session.member = result[0]
+            res.send("<script> alert('로그인 되었습니다.'); location.href='/';</script>");
+            //res.send(result);
+        }
+    })
 })
 
+app.get('/loginedit', (req, res) => {
+    res.render('loginedit');
+})
+
+app.post('/logineditProc', (req, res) => {
+    const user_id = req.body.user_id;
+    const old_pw = req.body.old_pw;
+    const new_pw = req.body.new_pw;
+
+    console.log("user_id:", user_id);
+    console.log("old_pw:", old_pw);
+    console.log("new_pw:", new_pw);
+
+    var sql = `SELECT * FROM member WHERE user_id = ?`
+
+    var values = [user_id];
+
+    connection.query(sql, values, function (err, result){
+        if(err) throw err;
+
+        if(result.length == 0){
+            res.render('loginedit');
+        } else if (result[0].pw !== old_pw) {
+            res.send("<script> alert('이전 비밀번호가 일치하지 않습니다.'); location.href='/loginedit';</script>");
+        } else {
+            var updateSql = `UPDATE member SET pw = ? WHERE user_id = ?`;
+            var updateValues = [new_pw, user_id];
+
+            connection.query(updateSql, updateValues, function (err, result) {
+                if (err) throw err;
+
+                console.log('비밀번호가 수정되었습니다.');
+                res.send("<script> alert('비밀번호가 수정되었습니다.'); location.href='/';</script>");
+            });
+        }
+    })
+})
 
 
 app.get('/logout', (req, res) => {
@@ -146,32 +174,40 @@ app.get('/register', (req, res) => {
 
 
 app.post('/register', (req, res) => {
-   const user_id = req.body.user_id;
-   const pw = req.body.pw;
-   const name = req.body.name;
+    console.log('함수 추가되었음', (req, res));
+    const user_id = req.body.user_id;
+    const pw = req.body.pw;
+    const name = req.body.name;
 
-   var checkDuplicateSql = `SELECT * FROM member WHERE user_id = ? OR name = ?`;
-   var checkDuplicateValues = [user_id, name];
+    console.log("user_id:", user_id);
+    console.log("pw:", pw);
+    console.log("name:", name);
 
-   connection.query(checkDuplicateSql, checkDuplicateValues, function (err, result) {
-      if (err) throw err;
+    if (pw.length < 8 || pw.length > 20) {
+        res.send("<script> alert('비밀번호는 최소 8자리, 최대 20자리까지 설정해주세요.'); location.href='/register';</script>");
+    } else {
+        var checkDuplicateSql = `SELECT * FROM member WHERE user_id = ? OR name = ?`;
+        var checkDuplicateValues = [user_id, name];
 
-      if (result.length > 0) {
-         res.send("<script> alert('이미 사용중인 회원입니다.'); location.href='/register';</script>");
-      } else {
-         var sql = `INSERT INTO member (user_id, pw, name) VALUES (?, ?, ?)`;
-         var values = [user_id, pw, name];
-
-         connection.query(sql, values, function (err, result) {
+        connection.query(checkDuplicateSql, checkDuplicateValues, function (err, result) {
             if (err) throw err;
 
-            console.log('회원가입이 완료되었습니다.');
-            res.send("<script> alert('회원가입이 완료되었습니다.'); location.href='/login';</script>");
-         });
-      }
-   });
-});
+            if (result.length > 0) {
+                res.send("<script> alert('이미 사용중인 회원입니다.'); location.href='/register';</script>");
+            } else {
+                var sql = `INSERT INTO member (user_id, pw, name) VALUES (?, ?, ?)`;
+                var values = [user_id, pw, name];
 
+                connection.query(sql, values, function (err, result) {
+                    if (err) throw err;
+
+                    console.log('회원가입이 완료되었습니다.');
+                    res.send("<script> alert('회원가입이 완료되었습니다.'); location.href='/login';</script>");
+                });
+            }
+        });
+    }
+});
 
 
 app.get('/addfavorite', (req, res) => {
@@ -180,20 +216,22 @@ app.get('/addfavorite', (req, res) => {
 
 
 app.post('/addfavoriteProc', (req, res) => {
-   const title = req.body.title;
-   const code = req.body.code;
+    const title = req.body.title;
+    const code = req.body.code;
 
-   var sql = `insert into favorites(title, code)
-   values(?,?)`
+    console.log("title:", title);
+    console.log("code:", code);
 
-   var values = [title, code];
+    var sql = `insert into favorites(title, code)
+               values(?,?)`
 
-   connection.query(sql, values, function (err, result){
-       if(err) throw err;
-       console.log('즐겨찾기 추가');
-       res.send("<script> alert('즐겨찾기에 추가하였습니다.'); location.href='/';</script>");
-   })
+    var values = [title, code];
 
+    connection.query(sql, values, function (err, result){
+        if(err) throw err;
+        console.log('즐겨찾기 추가');
+        res.send("<script> alert('즐겨찾기에 추가하였습니다.'); location.href='/';</script>");
+    })
 })
 
 app.get('/addfavoriteDelete', (req, res) => {
@@ -207,14 +245,12 @@ app.get('/addfavoriteDelete', (req, res) => {
 })
 
 app.get('/addfavoriteList', (req, res) => {
-
-   var sql = `select * from favorites order by idx desc `
-   connection.query(sql, function (err, results, fields){
-      if(err) throw err;
-      res.render('addfavoriteList',{lists:results})
-   })
-
-})
+    var sql = `SELECT * FROM favorites ORDER BY idx DESC `;
+    connection.query(sql, function (err, results, fields){
+        if(err) throw err;
+        res.json(results);
+    });
+});
 
 app.get('/findname', (req, res) => {
     res.render('findname');
@@ -307,6 +343,7 @@ app.post('/getStockInfo', async (req, res) => {
         }
     });
 });
+
 
 app.listen(port, () => {
   console.log(`서버가 실행되었습니다.`)
