@@ -243,17 +243,29 @@ app.post('/addfavoriteProc', (req, res) => {
     console.log("title:", title);
     console.log("code:", code);
 
-    var sql = `insert into favorites(title, code)
-               values(?,?)`
-
+    // 기존에 동일한 항목이 있는지 확인
+    var checkSql = "SELECT * FROM favorites WHERE title = ? AND code = ?";
     var values = [title, code];
 
-    connection.query(sql, values, function (err, result){
-        if(err) throw err;
-        console.log('즐겨찾기 추가');
-        res.send("<script> alert('즐겨찾기에 추가하였습니다.'); location.href='/';</script>");
-    })
-})
+    connection.query(checkSql, values, function (err, result) {
+        if (err) throw err;
+
+        // 중복되는 항목이 없으면 추가
+        if (result.length === 0) {
+            var sql = "INSERT INTO favorites(title, code) VALUES(?, ?)";
+
+            connection.query(sql, values, function (err, result) {
+                if (err) throw err;
+                console.log("즐겨찾기 추가");
+                res.send("<script> alert('즐겨찾기에 추가하였습니다.'); location.href='/';</script>");
+            });
+        } else {
+            // 중복되는 항목이 있다면 메시지 출력
+            console.log("이미 존재하는 항목");
+            res.send("<script> alert('이미 존재하는 항목입니다.'); location.href='/';</script>");
+        }
+    });
+});
 
 app.get('/addfavoriteDelete', (req, res) => {
    var idx = req.query.idx

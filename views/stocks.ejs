@@ -15,6 +15,7 @@
     <label for="stockName">종목 검색:</label>
     <input type="text" id="stockName" name="stockName" required>
     <button type="submit">종목 가져오기</button>
+
 </form>
 
 <% if (stockInfo) { %>
@@ -25,7 +26,13 @@
 <% } else { %>
     <p>No stock information available.</p>
 <% } %>
+
+<!-- 기본 버튼 타입 사용, onclick 이벤트로 페이지 이동 처리 -->
+<button type="button" onclick="location.href='/addfavoriteList'" style="display:block;margin-top:20px;">즐겨찾기 종목 보기</button>
+
+
 </body>
 </html>
+
 
 <%- include('footer.ejs') %>
