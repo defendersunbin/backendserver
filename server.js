@@ -118,7 +118,7 @@ app.post('/loginProc', async (req, res) => {
 
             if (passwordMatches) {
                 const token = jwt.sign({ user_id }, secretKey, {
-                    expiresIn: '1h',
+                    expiresIn: '15m',
                 });
 
                 res.cookie('token', token, { httpOnly: true });
@@ -278,14 +278,22 @@ app.get('/addfavoriteDelete', (req, res) => {
 })
 
 app.get('/addfavoriteList', (req, res) => {
+    var sql = `select * from favorites order by idx desc`;
+    connection.query(sql, function (err, results, fields) {
+        if (err) throw err;
 
-    var sql = `select * from favorites order by idx desc `
-    connection.query(sql, function (err, results, fields){
-        if(err) throw err;
-        res.render('addfavoriteList',{lists:results})
-    })
+        // 배열 생성 및 결과 저장
+        let favoriteList = results.map(result => {
+            return {
+                idx: result.idx,
+                title: result.title,
+                code: result.code
+            };
+        });
 
-})
+        res.json({favorites: favoriteList});
+    });
+});
 
 app.get('/findname', (req, res) => {
     res.render('findname');
@@ -417,6 +425,7 @@ app.post('/getStockInfo', async (req, res) => {
 
             const stockInfo = {
                 stockName: stockName,
+                stockCode: stockCode,
                 currentPrice: currentPrice,
                 change: change,
                 changePercentage: changePercentage
