@@ -458,16 +458,9 @@ async function getMainStocks() {
         const kosp200$= cheerio.load(kosp200Response.data);
         const kosp200IndexValue=kosp200$("#now_value").text();
 
-        // NASDAQ Composite Index (US)
-        const nasdaqUrl="https://finance.naver.com/sise/sise_index.naver?code=KOSPI";
-        const nasdaqResponse= await axios.get(nasdaqUrl);
-        const nasdaq$= cheerio.load(nasdaqResponse.data);
-        const nasdaqIndexValue=nasdaq$("#now_value").text();
-
         mainStocksList.push({name:"KOSPI", value:kospiIndexValue});
         mainStocksList.push({name:"KOSDAQ", value:kosdaqIndexValue});
         mainStocksList.push({name:"KOSPI200", value:kosp200IndexValue});
-        mainStocksList.push({name:"NASDAQ", value:nasdaqIndexValue});
 
     } catch(error) {
         console.error("Error while getting stock data:", error);
@@ -476,6 +469,7 @@ async function getMainStocks() {
 
     return mainStocksList;
 }
+
 
 app.get('/mainstocks', async (req, res) => {
     let mainstocksInfo;
