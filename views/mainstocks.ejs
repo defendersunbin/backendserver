@@ -1,0 +1,21 @@
+<%- include('header.ejs') %>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>주요지수 - 실시간</title>
+</head>
+<body>
+
+<h1>주요지수</h1>
+
+<ul>
+    <% for(let stock of mainstocksInfo){ %>
+        <li><%= stock.name %> : <%= stock.value %></li>
+    <% } %>
+</ul>
+
+</body>
+</html>
+
+<%- include('footer.ejs') %>

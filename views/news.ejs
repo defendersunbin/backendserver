@@ -1,0 +1,21 @@
+<%- include('header.ejs') %>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>News</title>
+</head>
+<body>
+
+<h1>News for <%= newsArticles[0].title %></h1>
+
+<ul>
+    <% for(let article of newsArticles){ %>
+        <li><a href="<%= article.url %>"><%= article.title %></a></li>
+    <% } %>
+</ul>
+
+</body>
+</html>
+
+<%- include('footer.ejs') %>

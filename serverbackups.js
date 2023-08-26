@@ -42,8 +42,6 @@ app.use((req, res, next) => {
    next()
  })
 
-
-
 app.get('/', (req, res) => {
    console.log(req.session.member);
 
@@ -417,22 +415,76 @@ app.post('/getStockInfo', async (req, res) => {
 
             const currentPrice = $('#chart_area > div.rate_info > div > p.no_today > em').text();
             const change = $('#chart_area > div.rate_info > div > p.no_exday > em > span.blind').text();
-            const changePercentage = $('#chart_area > div.rate_info > div > p.no_exday > em > span.blind').next().text();
+            const changePercentage=$('#chart_area>div.rate_info>div>p.no_exday>em>span.blind').next().text();
 
-            const stockInfo = {
-                stockName: stockName,
-                stockCode: stockCode,
-                currentPrice: currentPrice,
-                change: change,
-                changePercentage: changePercentage
+            // Add news search url
+            const newsUrl=`https://www.mk.co.kr/search?word=${encodeURIComponent(stockName)}`;
+
+            // Add the news url to the returned object
+            var stockInfo={
+                stockName:stockName,
+                stockCode:stockCode,
+                currentPrice:currentPrice,
+                change:change,
+                changePercentage:changePercentage,
+                newsUrl : newsUrl
             };
 
-            res.render('stocks', { stockInfo: stockInfo });
-        } catch (error) {
-            console.error('주식 데이터를 가져오는 중 오류 발생:', error);
-            res.render('stocks', { stockInfo: null });
+            res.render('stocks',{stockInfo : stockInfo});
+        } catch(error){
+            console.error("주식 데이터를 가져오는 중 오류 발생:", error);
+            res.render("stocks",{stockInfo:null});
         }
     });
+});
+
+
+async function getMainStocks() {
+    let mainStocksList = [];
+
+    try {
+        // KOSPI
+        const kospiResponse = await axios.get("https://finance.naver.com/sise/sise_index.nhn?code=KOSPI");
+        const kospi$ = cheerio.load(kospiResponse.data);
+        const kospiIndexValue = kospi$("#now_value").text();
+
+        // KOSDAQ
+        const kosdaqResponse= await axios.get("https://finance.naver.com/sise/sise_index.nhn?code=KOSDAQ");
+        const kosdaq$= cheerio.load(kosdaqResponse.data);
+        const kosdaqIndexValue=kosdaq$("#now_value").text();
+
+        // KOSPI200
+        const kosp200Response= await axios.get("https://finance.naver.com/sise/sise_index.nhn?code=KPI200");
+        const kosp200$= cheerio.load(kosp200Response.data);
+        const kosp200IndexValue=kosp200$("#now_value").text();
+
+        // NASDAQ Composite Index (US)
+        const nasdaqUrl="https://finance.naver.com/sise/sise_index.naver?code=KOSPI";
+        const nasdaqResponse= await axios.get(nasdaqUrl);
+        const nasdaq$= cheerio.load(nasdaqResponse.data);
+        const nasdaqIndexValue=nasdaq$("#now_value").text();
+
+        mainStocksList.push({name:"KOSPI", value:kospiIndexValue});
+        mainStocksList.push({name:"KOSDAQ", value:kosdaqIndexValue});
+        mainStocksList.push({name:"KOSPI200", value:kosp200IndexValue});
+        mainStocksList.push({name:"NASDAQ", value:nasdaqIndexValue});
+
+    } catch(error) {
+        console.error("Error while getting stock data:", error);
+        return [];  // Return an empty array in case of error
+    }
+
+    return mainStocksList;
+}
+
+app.get('/mainstocks', async (req, res) => {
+    let mainstocksInfo;
+    try{
+        mainstocksInfo=await getMainStocks();
+    }catch(error){
+        console.error("주식 데이터를 가져오는 중 오류 발생:", error);
+    }
+    res.render("mainstocks",{mainstocksInfo : mainstocksInfo });
 });
 
 
