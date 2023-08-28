@@ -29,7 +29,8 @@
     "passport": "^0.6.0",
     "passport-local": "^1.0.0",
     "python-shell": "^5.0.0",
-    "readline-sync": "^1.4.10"
+    "readline-sync": "^1.4.10",
+    "yahoo-finance": "^0.3.8"
   },
   "devDependencies": {
     "webpack": "^5.85.0"

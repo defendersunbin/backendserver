@@ -7,11 +7,14 @@
 </head>
 <body>
 
-<h1>주요지수</h1>
+<h1>주요지수 데이터 파일</h1>
 
 <ul>
     <% for(let stock of mainstocksInfo){ %>
-        <li><%= stock.name %> : <%= stock.value %></li>
+        <li><%= stock.name %> : <%= stock.value %>
+            <!-- Add a link to download the CSV file -->
+            (<a href="/download/<%= stock.name %>_data.csv">Download CSV</a>)
+        </li>
     <% } %>
 </ul>
 
@@ -19,3 +22,4 @@
 </html>
 
 <%- include('footer.ejs') %>
+

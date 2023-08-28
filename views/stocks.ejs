@@ -23,16 +23,26 @@
     <p>변화폭: <%= stockInfo.change %>원</p>
     <p>변화율: <%= stockInfo.changePercentage %>%</p>
 
-    <!-- Add news search link -->
-    <p><a href="<%= stockInfo.newsUrl %>">관련 뉴스 보기</a></p>
+    <!-- Add news search links -->
+    <p><a href="<%= stockInfo.newsUrl %>">관련 뉴스 보기 - MK News </a></p>
+
+    <!-- Add magazine search link -->
+    <p><a href="<%= stockInfo.magazineUrl %>">관련 뉴스 보기 - Hankyung Magazine </a></p>
+
+    <!-- Add economist search link -->
+    <p><a href="<%= stockInfo.economistUrl %>">관련 뉴스 보기 - Economist </a></p>
 
 <% } else { %>
-    <p>No stock information available.</p>
+
+    <p>검색하실 종목을 입력해주세요.</p>
+
 <% } %>
+
 
 <!-- 기본 버튼 타입 사용, onclick 이벤트로 페이지 이동 처리 -->
 <button type="button" onclick="location.href='/addfavoriteList'" style="display:block;margin-top:20px;">즐겨찾기 종목 보기
 </button>
+
 
 </body >
 </html >

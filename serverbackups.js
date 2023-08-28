@@ -11,6 +11,7 @@ const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const jwt = require('jsonwebtoken');
 const secretKey = 'tIMEiSwATCH2023!!';
+const secretKeyRefreshToken = 'timEWatch2023@@';
 var session = require('express-session')
 
 require('dotenv').config()
@@ -99,9 +100,8 @@ app.get('/contactList', (req, res) => {
 })
 
 app.get('/login', (req, res) => {
-   res.render('login')
-})
-
+    res.render('login')
+});
 
 app.post('/loginProc', async (req, res) => {
     const user_id = req.body.user_id;
@@ -120,20 +120,69 @@ app.post('/loginProc', async (req, res) => {
             const passwordMatches = await bcrypt.compare(enteredPassword, storedHash);
 
             if (passwordMatches) {
-                const token = jwt.sign({ user_id }, secretKey, {
-                    expiresIn: '15m',
+                // Access Token
+                const accessToken = jwt.sign({ user_id }, secretKey, { expiresIn: '15m' });
+
+                // Refresh Token
+                const refreshToken = jwt.sign({ user_id }, secretKeyRefreshToken, { expiresIn: '1d' });
+
+                // Store tokens in the database
+                var tokenSql = `UPDATE member SET access_token=?, refresh_token=? WHERE user_id=?`;
+                var tokenValues=[accessToken , refreshToken ,user_id];
+
+                // Store the member info temporarily
+                let memberInfoTemp=result[0];
+
+                connection.query(tokenSql ,tokenValues ,(err,result)=>{
+                    if(err){
+                        console.log("Failed to store tokens in the database");
+                        throw err;
+                    }
+                    console.log("Tokens stored successfully");
+
+                    res.cookie('access_token', accessToken , { httpOnly: true });
+                    res.cookie('refresh_token', refreshToken , { httpOnly: true });
+
+                    // Use the temporarily saved member info here.
+                    req.session.member=memberInfoTemp;
+
+                    return res.send("<script> alert('로그인 되었습니다.'); location.href='/';</script>");
+
                 });
-
-                res.cookie('token', token, { httpOnly: true });
-
-                req.session.member = result[0];
-                res.send("<script> alert('로그인 되었습니다.'); location.href='/';</script>");
             } else {
-                res.send("<script> alert('비밀번호가 일치하지 않습니다.'); location.href='/login';</script>");
+                return  res.send("<script> alert('비밀번호가 일치하지 않습니다.'); location.href='/login';</script>");
             }
         }
+
     });
 });
+
+
+app.post('/token', (req,res)=>{
+    const refreshToken=req.cookies.refresh_token;
+
+    if(!refreshToken){
+        return res.sendStatus(401); // Unauthorized
+    }
+
+    jwt.verify(refreshToken,
+        secretKeyRefreshToken,
+        (err,user)=>{
+            if(err){
+                return res.sendStatus(403); // Forbidden
+            }
+
+            const accessToken=jwt.sign({user_id:user.user_id},secretKey,{expiresIn:'15m'});
+            const newRefreshToken=jwt.sign({user_id:user.user_id},secretKeyRefreshToken,{expiresIn:'1d'});
+
+            res.cookie('access_token',accessToken ,{httpOnly:true});
+            res.cookie('refresh_token',newRefreshToken ,{httpOnly:true});
+
+            return res.json({access_token:accessToken});
+        });
+});
+
+
 
 app.get('/loginedit', (req, res) => {
    res.render('loginedit');
