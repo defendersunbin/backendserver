@@ -531,7 +531,7 @@ async function getMainStocks() {
             const data = await yahooFinance.historical({
                 symbol: index.symbol,
                 from: '2020-01-01',
-                to:'2023-12-31',
+                to:'2099-12-31',
                 period:'d'
             });
 
