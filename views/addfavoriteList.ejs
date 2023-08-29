@@ -1,7 +1,6 @@
 <%-include('header.ejs')%>
 
-
-    <h1> 즐겨찾기 목록 </h1>
+<h1> 즐겨찾기 목록 </h1>
 
 <table border=1>
     <tr>
@@ -14,8 +13,13 @@
     <tr>
         <td> <%=item.idx%> </td>
         <td> <%=item.title%> </td>
-        <td> <%-item.code.replaceAll("\n","<br>")%> </td>
-        <td> <a href="/addfavoriteDelete?idx=<%=item.idx%>" onclick="return confirm('정말 삭제할까요?')">삭제</a></td>
+        <td><%-item.code.replaceAll("\n","<br>")%></td>
+
+        <!-- Add user_id parameter to the delete link -->
+        <!-- 삭제 링크에 user_id 파라미터 추가 -->
+        <!-- 현재 로그인된 사용자의 ID를 함께 서버로 전송 -->
+        <!-- 예: /addfavoriteDelete?idx=123&user_id=john_doe -->
+        <td><a href="/addfavoriteDelete?idx=<%=item.idx%>&user_id=<%=user_id%>" onclick="return confirm('정말 삭제할까요?')">삭제</a></td>
 
     </tr>
 
@@ -23,6 +27,8 @@
 
 </table>
 
+
 <button type="button" onclick="location.href='/stocks'" style="display:block;margin-top:20px;">종목 검색하기</button>
+
 
 <%-include('footer.ejs')%>

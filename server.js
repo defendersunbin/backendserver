@@ -35,66 +35,66 @@ app.use(session({ secret: 'test', cookie: { maxAge: 60000 }, resave:true, saveUn
 
 app.use((req, res, next) => {
 
-   res.locals.user_id = "";
-   res.locals.name = "";
+    res.locals.user_id = "";
+    res.locals.name = "";
 
-   if(req.session.member){
-      res.locals.user_id = req.session.member.user_id
-      res.locals.name = req.session.member.name
-   }
-   next()
- })
+    if(req.session.member){
+        res.locals.user_id = req.session.member.user_id
+        res.locals.name = req.session.member.name
+    }
+    next()
+})
 
 app.get('/', (req, res) => {
-   console.log(req.session.member);
+    console.log(req.session.member);
 
-   res.render('index')   // ./views/index.ejs
+    res.render('index')   // ./views/index.ejs
 })
 
 app.get('/profile', (req, res) => {
-   res.render('profile')
+    res.render('profile')
 })
 
 app.get('/contact', (req, res) => {
-   res.render('contact')
+    res.render('contact')
 })
 
 app.post('/contactProc', (req, res) => {
-   const name = req.body.name;
-   const phone = req.body.phone;
-   const email = req.body.email;
-   const memo = req.body.memo;
+    const name = req.body.name;
+    const phone = req.body.phone;
+    const email = req.body.email;
+    const memo = req.body.memo;
 
-   var sql = `insert into contact(name,phone,email,memo,regdate)
+    var sql = `insert into contact(name,phone,email,memo,regdate)
    values(?,?,?,?,now() )`
 
-   var values = [name,phone,email,memo];
+    var values = [name,phone,email,memo];
 
-   connection.query(sql, values, function (err, result){
-       if(err) throw err;
-       console.log('자료 1개를 삽입하였습니다.');
-       res.send("<script> alert('문의사항이 등록되었습니다.'); location.href='/';</script>");
-   })
+    connection.query(sql, values, function (err, result){
+        if(err) throw err;
+        console.log('자료 1개를 삽입하였습니다.');
+        res.send("<script> alert('문의사항이 등록되었습니다.'); location.href='/';</script>");
+    })
 })
 
 app.get('/contactDelete', (req, res) => {
-   var idx = req.query.idx
-   var sql = `delete from contact where idx='${idx}' `
-   connection.query(sql, function (err, result){
-      if(err) throw err;
+    var idx = req.query.idx
+    var sql = `delete from contact where idx='${idx}' `
+    connection.query(sql, function (err, result){
+        if(err) throw err;
 
-      res.send("<script> alert('삭제되었습니다.'); location.href='/contactList';</script>");
-  })
+        res.send("<script> alert('삭제되었습니다.'); location.href='/contactList';</script>");
+    })
 })
 
 
 app.get('/contactList', (req, res) => {
 
-   var sql = `select * from contact order by idx desc `
-   connection.query(sql, function (err, results, fields){
-      if(err) throw err;
-      res.render('contactList',{lists:results})
-   })
+    var sql = `select * from contact order by idx desc `
+    connection.query(sql, function (err, results, fields){
+        if(err) throw err;
+        res.render('contactList',{lists:results})
+    })
 })
 
 
@@ -227,49 +227,59 @@ app.post('/logineditProc', async (req, res) => {
 
 app.get('/logout', (req, res) => {
 
-   req.session.member = null;
-   res.send("<script> alert('로그아웃 되었습니다.'); location.href='/';</script>");
+    req.session.member = null;
+    res.send("<script> alert('로그아웃 되었습니다.'); location.href='/';</script>");
 
 })
+
+const resetQuestions = [
+    "첫 번째 애완동물의 이름은 무엇인가요?",
+    "초등학교 시절 최고의 친구는 누구였나요?",
+    "당신이 태어난 도시는 어디인가요?",
+    "첫 번째 자동차의 모델은 무엇인가요?",
+    "당신이 존경하는 인물은 누구인가요?",
+    "당신의 어린 시절 별명은 무엇인가요?"
+];
 
 app.get('/register', (req, res) => {
-   res.render('register')
+    res.render('register', {resetQuestions: resetQuestions})
 })
-
 
 app.post('/register', (req, res) => {
     const user_id = req.body.user_id;
     const pw = req.body.pw;
     const name = req.body.name;
+    const resetQuestionIndex = req.body.resetQuestionIndex; // 비밀번호 재설정 질문 인덱스
+    const resetAnswer = req.body.resetAnswer; // 비밀번호 재설정 답변
 
     if (pw.length < 8 || pw.length > 20) {
         res.send("<script> alert('비밀번호는 최소 8자리, 최대 20자리까지 설정해주세요.'); location.href='/register';</script>");
     } else {
-        var checkDuplicateSql = `SELECT * FROM member WHERE user_id = ? OR name = ?`;
-        var checkDuplicateValues = [user_id, name];
+        var checkDuplicateSql = `SELECT * FROM member WHERE user_id=? OR name=?`;
+        var checkDuplicateValues=[user_id,name];
 
-        connection.query(checkDuplicateSql, checkDuplicateValues, function (err, result) {
-            if (err) throw err;
+        connection.query(checkDuplicateSql,checkDuplicateValues,function(err,result){
+            if(err) throw err;
 
-            if (result.length > 0) {
+            if(result.length>0){
                 res.send("<script> alert('이미 사용중인 회원입니다.'); location.href='/register';</script>");
             } else {
-                bcrypt.hash(pw, saltRounds, function(err, hash) {
-                    if (err) throw err;
+                bcrypt.hash(pw,saltRounds,function(err,hash){
+                    if(err) throw err;
 
-                    var sql = `INSERT INTO member (user_id, pw, name) VALUES (?, ?, ?)`;
-                    var values = [user_id, hash, name];
+                    var sql=`INSERT INTO member (user_id,pw,name ,resetQuestion ,resetAnswer ) VALUES (?, ?, ?, ?, ?)`;
+                    var values=[user_id, hash,name ,resetQuestions[resetQuestionIndex] ,resetAnswer ];
 
-                    connection.query(sql, values, function (err, result) {
-                        if (err) throw err;
+                    connection.query(sql,values,function(err,result){
+                        if(err) throw err;
 
                         console.log('회원가입이 완료되었습니다.');
 
-                        const token = jwt.sign({ user_id }, secretKey, {
-                            expiresIn: '1h',
+                        const token=jwt.sign({user_id},secretKey,{
+                            expiresIn:'1h',
                         });
 
-                        console.log('토큰:', token);
+                        console.log('토큰:',token);
 
                         res.send("<script> alert('회원가입이 완료되었습니다.'); location.href='/login';</script>");
                     });
@@ -279,6 +289,51 @@ app.post('/register', (req, res) => {
     }
 });
 
+app.get('/reset-password', function(req,res){
+    res.render("reset-password", {resetQuestions: resetQuestions});
+});
+
+app.post("/reset-password",function(req,res){
+    let username=req.body.username;
+    let answer=req.body.answer;
+    let newPassword=req.body.newPassword;
+    let selectedQuestionIndex = req.body.selectedQuestionIndex;
+
+    if (newPassword.length < 8 || newPassword.length > 20) {
+        res.send("<script> alert('비밀번호는 최소 8자리, 최대 20자리까지 설정해주세요.'); location.href='/reset-password';</script>");
+    } else {
+        let sql=`SELECT resetAnswer, resetQuestion FROM member WHERE user_id=?`;
+        connection.query(sql,[username],function(err,result){
+            if(err) throw err;
+            if(result.length>0 && result[0].resetAnswer===answer && result[0].resetQuestion === resetQuestions[selectedQuestionIndex]){
+                bcrypt.hash(newPassword, saltRounds, function(err, hash) {
+                    if (err) throw err;
+
+                    var sql = `UPDATE member SET pw = ? WHERE user_id = ?`;
+                    var values = [hash, username];
+
+                    connection.query(sql, values,function(err,result){
+                        if(err) throw err;
+
+                        console.log('비밀번호가 재설정되었습니다.');
+
+                        // 세션 제거
+                        req.session.destroy(function(err) {
+                            // 에러 처리
+                            if (err) throw err;
+
+                            // 리다이렉트
+                            res.send("<script> alert('비밀번호가 재설정되었습니다. 다시 로그인 해주세요.'); location.href='/login';</script>");
+                        });
+
+                    });
+                });
+            } else {
+                res.send("<script> alert('답변이 일치하지 않습니다.'); location.href='/reset-password';</script>");
+            }
+        });
+    }
+});
 
 app.get('/addfavorite', (req, res) => {
     res.render('addfavorite');
@@ -317,13 +372,13 @@ app.post('/addfavoriteProc', (req, res) => {
 });
 
 app.get('/addfavoriteDelete', (req, res) => {
-   var idx = req.query.idx
-   var sql = `delete from favorites where idx='${idx}' `
-   connection.query(sql, function (err, result){
-      if(err) throw err;
+    var idx = req.query.idx
+    var sql = `delete from favorites where idx='${idx}' `
+    connection.query(sql, function (err, result){
+        if(err) throw err;
 
-      res.send("<script> alert('즐겨찾기에서 삭제되었습니다.'); location.href='/addfavoriteList';</script>");
-  })
+        res.send("<script> alert('즐겨찾기에서 삭제되었습니다.'); location.href='/addfavoriteList';</script>");
+    })
 })
 
 app.get('/addfavoriteList', (req, res) => {
@@ -344,35 +399,12 @@ app.get('/addfavoriteList', (req, res) => {
     });
 });
 
-app.get('/findname', (req, res) => {
-    res.render('findname');
-})
-
-app.post('/findname', async (req, res) => {
-    const user_id = req.body.user_id;
-
-    var findNameSql = `SELECT * FROM member WHERE user_id = ?`;
-    var findNameValues = [user_id];
-
-    connection.query(findNameSql, findNameValues, function (err, result) {
-        if (err) throw err;
-
-        if (result.length > 0) {
-            const name = result[0].name;
-            res.send(`<script> alert('회원님의 이름은 ${name}입니다.'); location.href='/findname';</script>`);
-        } else {
-            res.send(`<script> alert('일치하는 회원 정보가 없습니다.'); location.href='/findname';</script>`);
-        }
-    });
-});
-
-
 app.get('/logindeactivate', (req, res) => {
-    res.render('logindeactivate');
+    res.render('logindeactivate', {resetQuestions: resetQuestions});
 })
 
 app.post('/logindeactivate', async (req, res) => {
-    const { user_id, pw } = req.body;
+    const { user_id, pw, resetQuestionIndex, resetAnswer } = req.body;
 
     // 데이터베이스에서 사용자 찾기
     const sql = 'SELECT * FROM member WHERE user_id = ?';
@@ -380,7 +412,7 @@ app.post('/logindeactivate', async (req, res) => {
     connection.query(sql, [user_id], async (err, result) => {
         if (err) throw err;
 
-        if (result.length === 0) {
+        if (result.length === 0 || result[0].resetQuestion !== resetQuestions[resetQuestionIndex] || result[0].resetAnswer !== resetAnswer) {
             res.send("<script> alert('사용자 정보가 일치하지 않습니다.'); location.href='/logindeactivate';</script>");
         } else {
             const storedHash = result[0].pw;
@@ -402,60 +434,6 @@ app.post('/logindeactivate', async (req, res) => {
         }
     });
 });
-
-
-app.get('/resetpw', (req, res) => {
-    const user_id = req.query.user_id;
-    const name = req.query.name;
-
-    res.render('resetpw', { user_id: user_id, name: name });
-});
-
-app.post('/resetpw', async (req, res) => {
-    const user_id = req.body.user_id;
-    const name = req.body.name;
-    const new_pw = req.body.new_pw;
-
-    // Check if the entered name matches the one in the database
-    var checkSql = `SELECT * FROM member WHERE user_id = ? AND name = ?`;
-    var checkValues = [user_id, name];
-
-    connection.query(checkSql, checkValues, async function (err, result) {
-        if (err) throw err;
-
-        // If there is no match for both user_id and name
-        if(result.length === 0){
-            return res.send("<script> alert('아이디와 이름이 일치하지 않습니다.'); location.href='/resetpw';</script>");
-        }
-
-        if (new_pw.length < 8 || new_pw.length > 20) {
-            res.send("<script> alert('비밀번호는 최소 8자리, 최대 20자리까지 설정해주세요.'); location.href='/resetpw';</script>");
-        } else {
-            bcrypt.hash(new_pw, saltRounds, function(err, hash) {
-                if (err) throw err;
-
-                var sql = `UPDATE member SET pw=? WHERE user_id=?`;
-                var values = [hash ,user_id];
-
-                connection.query(sql ,values ,(err,result)=>{
-                    if(err){
-                        console.log("Failed to reset password");
-                        throw err;
-                    }
-                    console.log("Password reset successfully");
-
-                    // Reset the session after password change
-                    req.session.member = null;
-
-                    return res.send("<script> alert('비밀번호가 성공적으로 변경되었습니다. 다시 로그인 해주세요.'); location.href='/login';</script>");
-                });
-            });
-        }
-    });
-});
-
-
-
 
 app.get('/stocks', (req, res) => {
     res.render('stocks', { stockInfo: null });
@@ -570,5 +548,5 @@ app.get('/download/:file', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`서버가 실행되었습니다.`)
+    console.log(`서버가 실행되었습니다.`)
 })

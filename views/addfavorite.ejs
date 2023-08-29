@@ -8,14 +8,25 @@
     <link rel="stylesheet" type="text/css" href="/styles.css">
 </head>
 <body>
-    <h1>Add Favorite</h1>
-    <form action="/addfavoriteProc" method="POST">
-        <label for="title">주식종목:</label>
-        <input type="text" id="title" name="title" required><br><br>
-        <label for="url">주식코드:</label>
-        <input type="text" id="code" name="code" required><br><br>
-        <input type="submit" value="Add Favorite">
-    </form>
+<h1>Add Favorite</h1>
+
+<!-- Form for adding a favorite item -->
+<form action="/addfavoriteProc" method="POST">
+
+    <!-- Hidden input for the current logged-in user's ID -->
+    <input type="hidden" id="user_id" name="user_id" value="<%= user_id %>">
+
+    <!-- Input fields for the title and code of the favorite item -->
+    <label for="title">주식종목:</label>
+    <input type="text" id="title" name ="title" required><br><br>
+
+    <label for="code">주식코드:</label>
+    <input type ="text"id ="code"name ="code"required><br><br>
+
+    <!-- Submit button -->
+    <input type ="submit"value = "Add Favorite">
+
+    </form >
     <br>
     <a href="/">이전</a>
 </body>

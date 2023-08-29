@@ -3,12 +3,41 @@
 <form action="/register" method="post" >
     <ul>
         <li> 회원가입 </li>
-         <li> 아이디 : <input type="text" name="user_id"  required ></li>
-         <li> 비밀번호 : <input type="password" name="pw" required></li>
-         <li> 이름 : <input type="text" name="name" required ></li>
+        <li> 아이디 : <input type="text" name="user_id" required ></li>
+        <li> 비밀번호 : <input type="password" name="pw" required></li>
+        <li> 이름 : <input type="text" name="name" required ></li>
 
-        <button>회원가입</button>
+        <!-- 비밀번호 재설정 질문 선택 -->
+        <li>
+            비밀번호 재설정 질문 :
+            <!-- 사용자가 선택할 수 있는 질문들을 dropdown 메뉴로 제공 -->
+            <select name='resetQuestionIndex'>
+                <% for(var i=0; i<resetQuestions.length; i++) {%>
+                <!-- 각 option의 value는 해당 질문의 인덱스 -->
+                <!-- 사용자가 선택한 option의 value는 req.body.resetQuestionIndex로 접근 가능-->
+                <option value="<%=i%>"><%= resetQuestions[i] %></option>
+                <% } %>
+            </select>
+        </li>
+
+        <!-- 비밀번호 재설정 답변 입력 -->
+        <li>
+            답변 :
+            <!-- 사용자가 답변을 입력할 수 있는 텍스트 필드 제공 -->
+            <!-- 사용자가 입력한 답변은 req.body.resetAnswer로 접근 가능-->
+            <input type='text' name='resetAnswer' required />
+        </li>
+
+
+
+        <button type = "submit">회원가입</button>
     </ul>
+
+    <button onclick = "location.href='/login'">로그인 페이지로 가기</button>
+
 </form>
 
+
 <%-include('footer.ejs')%>
+
+
