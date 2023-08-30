@@ -99,6 +99,12 @@ app.get('/contactList', (req, res) => {
 
 
 app.get('/login', (req, res) => {
+    // 이미 로그인된 경우 메인 페이지로 리다이렉트
+    if (req.session.member) {
+        return res.redirect('/');
+    }
+
+    // 아니면 로그인 페이지 표시
     res.render('login')
 });
 
@@ -155,7 +161,6 @@ app.post('/loginProc', async (req, res) => {
 
     });
 });
-
 
 app.post('/token', (req,res)=>{
     const refreshToken=req.cookies.refresh_token;
@@ -227,10 +232,15 @@ app.post('/logineditProc', async (req, res) => {
 
 app.get('/logout', (req, res) => {
 
-    req.session.member = null;
-    res.send("<script> alert('로그아웃 되었습니다.'); location.href='/';</script>");
+    // If the user is not logged in redirect to main page.
+    if (!req.session.member){
+        return  res.redirect("/");
+    }
 
-})
+    req.session.member=null;
+
+    return  res.send("<script> alert('로그아웃 되었습니다.'); location.href='/';</script>");
+});
 
 const resetQuestions = [
     "첫 번째 애완동물의 이름은 무엇인가요?",
@@ -533,7 +543,7 @@ async function getMainStocks() {
         const indices = [
             { name: 'KOSPI', symbol: '^KS11' },
             { name: 'KOSDAQ', symbol: '^KQ11' },
-            { name: 'KOSPI200', symbol: '^KS11'}
+            { name: 'KOSPI200', symbol: '^KS200'}
         ];
 
         for (let index of indices) {
@@ -552,8 +562,12 @@ async function getMainStocks() {
             });
 
             fs.writeFileSync(`${index.name}_data.csv`, csvContent);
-            mainstocksInfo.push({name:index.name,value:'Saved to CSV'});
 
+            mainstocksInfo.push({
+                name:index.name,
+                value:'Saved to CSV',
+                csvUrl:`/download/${index.name}_data.csv`
+            });
         }
 
     } catch(error) {
@@ -569,8 +583,10 @@ app.get('/mainstocks', async (req, res) => {
         mainstocksInfo=await getMainStocks();
     }catch(error){
         console.error("주식 데이터를 가져오는 중 오류 발생:", error);
+        mainstocksInfo=[];
     }
-    res.render("mainstocks",{mainstocksInfo : mainstocksInfo });
+
+    res.json(mainstocksInfo);
 });
 
 app.get('/download/:file', (req, res) => {

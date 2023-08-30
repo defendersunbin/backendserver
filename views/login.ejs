@@ -1,13 +1,18 @@
 <%- include('header.ejs') %>
 
-<form action="/loginProc" method="post">
-    <ul>
-        <li> 아이디 : <input type="text" name="user_id" required></li>
-        <li> 비밀번호 : <input type="password" name="pw" required></li>
+<% if (!locals.isLoggedIn) { %>
+    <form action="/loginProc" method="post">
+        <ul>
+            <li> 아이디 : <input type="text" name="user_id" required></li>
+            <li> 비밀번호 : <input type="password" name="pw" required></li>
 
-        <button>로그인</button>
-        <button type="button" onclick="location.href='/loginedit' ">비밀번호 변경</button>
-    </ul>
-</form>
+            <button>로그인</button>
+            <button type="button" onclick="location.href='/loginedit' ">비밀번호 변경</button>
+        </ul>
+    </form>
+<% } else { %>
+    <p>당신은 이미 로그인되어 있습니다.</p>
+<% } %>
 
 <%- include('footer.ejs') %>
+

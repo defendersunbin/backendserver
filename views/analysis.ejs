@@ -1,0 +1,36 @@
+<%- include('header.ejs') %>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Analysis Page</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+
+<body>
+<h1>Analysis Result:</h1>
+
+<!-- The result will be displayed in this div -->
+<div id="result"></div>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $.ajax({
+            url: '/analysis',
+            type: 'GET',
+            success: function(data) {
+                // Display the result in the "result" div
+                $('#result').html(data);
+            },
+            error: function(error) {
+                console.error('Error:', error);
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
+
+
+<%- include('footer.ejs') %>
