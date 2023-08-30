@@ -336,11 +336,18 @@ app.post("/reset-password",function(req,res){
 });
 
 app.get('/addfavorite', (req, res) => {
+    if (!req.session.member) {
+        return res.redirect('/login');
+    }
     res.render('addfavorite');
-})
-
+});
 
 app.post('/addfavoriteProc', (req, res) => {
+    if (!req.session.member) {
+        return res.redirect('/login');
+    }
+
+    const user_id = req.session.member.user_id;
     const title = req.body.title;
     const code = req.body.code;
 
@@ -348,56 +355,81 @@ app.post('/addfavoriteProc', (req, res) => {
     console.log("code:", code);
 
     // 기존에 동일한 항목이 있는지 확인
-    var checkSql = "SELECT * FROM favorites WHERE title = ? AND code = ?";
-    var values = [title, code];
+    var checkSql = "SELECT * FROM favorites WHERE user_id=? AND title=? AND code=?";
+    var values = [user_id, title, code];
 
     connection.query(checkSql, values, function (err, result) {
         if (err) throw err;
 
         // 중복되는 항목이 없으면 추가
         if (result.length === 0) {
-            var sql = "INSERT INTO favorites(title, code) VALUES(?, ?)";
+            var sql="INSERT INTO favorites(user_id,title,code) VALUES(?,?,?)";
 
-            connection.query(sql, values, function (err, result) {
-                if (err) throw err;
+            connection.query(sql,values,function(err,result){
+                if(err) throw err;
+
                 console.log("즐겨찾기 추가");
+
                 res.send("<script> alert('즐겨찾기에 추가하였습니다.'); location.href='/';</script>");
             });
         } else {
             // 중복되는 항목이 있다면 메시지 출력
             console.log("이미 존재하는 항목");
+
             res.send("<script> alert('이미 존재하는 항목입니다.'); location.href='/';</script>");
         }
     });
 });
 
-app.get('/addfavoriteDelete', (req, res) => {
-    var idx = req.query.idx
-    var sql = `delete from favorites where idx='${idx}' `
-    connection.query(sql, function (err, result){
+app.get('/addfavoriteDelete', (req,res)=>{
+    if (!req.session.member){
+        return  res.redirect("/login");
+    }
+
+    const user_id=req.session.member.user_id;
+    const favoriteId=req.query.idx;
+
+    var deleteSql="DELETE FROM favorites WHERE idx=? AND user_id=?";
+    var deleteValues=[favoriteId,user_id];
+
+    connection.query(deleteSql ,deleteValues ,(err,result)=>{
+        if(err){
+            throw err;
+        }
+
+        return  res.send("<script> alert('즐겨찾기에서 삭제되었습니다.'); location.href='/addfavoriteList';</script>");
+
+    });
+});
+
+app.get('/addfavoriteList', function(req,res){
+
+    // 로그인 되어 있지 않은 경우 로그인 페이지로 이동합니다.
+    if(!req.session.member){
+        return  res.redirect("/login");
+    }
+
+    const user_id=req.session.member.user_id;
+
+    var selectSql="SELECT * FROM favorites WHERE user_id=? ORDER BY idx DESC";
+    var selectValues=[user_id];
+
+    connection.query(selectSql,selectValues,function(err,result){
         if(err) throw err;
 
-        res.send("<script> alert('즐겨찾기에서 삭제되었습니다.'); location.href='/addfavoriteList';</script>");
-    })
-})
-
-app.get('/addfavoriteList', (req, res) => {
-    var sql = `select * from favorites order by idx desc`;
-    connection.query(sql, function (err, results, fields) {
-        if (err) throw err;
-
-        // 배열 생성 및 결과 저장
-        let favoriteList = results.map(result => {
-            return {
-                idx: result.idx,
-                title: result.title,
-                code: result.code
+        let favoriteList=result.map(item=>{
+            return{
+                idx: item.idx,
+                title: item.title,
+                code: item.code
             };
         });
 
+        // JSON 형태로 즐겨찾기 리스트 전달
         res.json({favorites: favoriteList});
     });
 });
+
 
 app.get('/logindeactivate', (req, res) => {
     res.render('logindeactivate', {resetQuestions: resetQuestions});
