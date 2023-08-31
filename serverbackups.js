@@ -99,6 +99,12 @@ app.get('/contactList', (req, res) => {
 
 
 app.get('/login', (req, res) => {
+    // 이미 로그인된 경우 메인 페이지로 리다이렉트
+    if (req.session.member) {
+        return res.redirect('/');
+    }
+
+    // 아니면 로그인 페이지 표시
     res.render('login')
 });
 
@@ -155,7 +161,6 @@ app.post('/loginProc', async (req, res) => {
 
     });
 });
-
 
 app.post('/token', (req,res)=>{
     const refreshToken=req.cookies.refresh_token;
@@ -227,10 +232,15 @@ app.post('/logineditProc', async (req, res) => {
 
 app.get('/logout', (req, res) => {
 
-    req.session.member = null;
-    res.send("<script> alert('로그아웃 되었습니다.'); location.href='/';</script>");
+    // If the user is not logged in redirect to main page.
+    if (!req.session.member){
+        return  res.redirect("/");
+    }
 
-})
+    req.session.member=null;
+
+    return  res.send("<script> alert('로그아웃 되었습니다.'); location.href='/';</script>");
+});
 
 const resetQuestions = [
     "첫 번째 애완동물의 이름은 무엇인가요?",
@@ -336,11 +346,18 @@ app.post("/reset-password",function(req,res){
 });
 
 app.get('/addfavorite', (req, res) => {
+    if (!req.session.member) {
+        return res.redirect('/login');
+    }
     res.render('addfavorite');
-})
-
+});
 
 app.post('/addfavoriteProc', (req, res) => {
+    if (!req.session.member) {
+        return res.redirect('/login');
+    }
+
+    const user_id = req.session.member.user_id;
     const title = req.body.title;
     const code = req.body.code;
 
@@ -348,56 +365,81 @@ app.post('/addfavoriteProc', (req, res) => {
     console.log("code:", code);
 
     // 기존에 동일한 항목이 있는지 확인
-    var checkSql = "SELECT * FROM favorites WHERE title = ? AND code = ?";
-    var values = [title, code];
+    var checkSql = "SELECT * FROM favorites WHERE user_id=? AND title=? AND code=?";
+    var values = [user_id, title, code];
 
     connection.query(checkSql, values, function (err, result) {
         if (err) throw err;
 
         // 중복되는 항목이 없으면 추가
         if (result.length === 0) {
-            var sql = "INSERT INTO favorites(title, code) VALUES(?, ?)";
+            var sql="INSERT INTO favorites(user_id,title,code) VALUES(?,?,?)";
 
-            connection.query(sql, values, function (err, result) {
-                if (err) throw err;
+            connection.query(sql,values,function(err,result){
+                if(err) throw err;
+
                 console.log("즐겨찾기 추가");
+
                 res.send("<script> alert('즐겨찾기에 추가하였습니다.'); location.href='/';</script>");
             });
         } else {
             // 중복되는 항목이 있다면 메시지 출력
             console.log("이미 존재하는 항목");
+
             res.send("<script> alert('이미 존재하는 항목입니다.'); location.href='/';</script>");
         }
     });
 });
 
-app.get('/addfavoriteDelete', (req, res) => {
-    var idx = req.query.idx
-    var sql = `delete from favorites where idx='${idx}' `
-    connection.query(sql, function (err, result){
+app.get('/addfavoriteDelete', (req,res)=>{
+    if (!req.session.member){
+        return  res.redirect("/login");
+    }
+
+    const user_id=req.session.member.user_id;
+    const favoriteId=req.query.idx;
+
+    var deleteSql="DELETE FROM favorites WHERE idx=? AND user_id=?";
+    var deleteValues=[favoriteId,user_id];
+
+    connection.query(deleteSql ,deleteValues ,(err,result)=>{
+        if(err){
+            throw err;
+        }
+
+        return  res.send("<script> alert('즐겨찾기에서 삭제되었습니다.'); location.href='/addfavoriteList';</script>");
+
+    });
+});
+
+app.get('/addfavoriteList', function(req,res){
+
+    // 로그인 되어 있지 않은 경우 로그인 페이지로 이동합니다.
+    if(!req.session.member){
+        return  res.redirect("/login");
+    }
+
+    const user_id=req.session.member.user_id;
+
+    var selectSql="SELECT * FROM favorites WHERE user_id=? ORDER BY idx DESC";
+    var selectValues=[user_id];
+
+    connection.query(selectSql,selectValues,function(err,result){
         if(err) throw err;
 
-        res.send("<script> alert('즐겨찾기에서 삭제되었습니다.'); location.href='/addfavoriteList';</script>");
-    })
-})
-
-app.get('/addfavoriteList', (req, res) => {
-    var sql = `select * from favorites order by idx desc`;
-    connection.query(sql, function (err, results, fields) {
-        if (err) throw err;
-
-        // 배열 생성 및 결과 저장
-        let favoriteList = results.map(result => {
-            return {
-                idx: result.idx,
-                title: result.title,
-                code: result.code
+        let favoriteList=result.map(item=>{
+            return{
+                idx: item.idx,
+                title: item.title,
+                code: item.code
             };
         });
 
+        // JSON 형태로 즐겨찾기 리스트 전달
         res.json({favorites: favoriteList});
     });
 });
+
 
 app.get('/logindeactivate', (req, res) => {
     res.render('logindeactivate', {resetQuestions: resetQuestions});
@@ -501,7 +543,7 @@ async function getMainStocks() {
         const indices = [
             { name: 'KOSPI', symbol: '^KS11' },
             { name: 'KOSDAQ', symbol: '^KQ11' },
-            { name: 'KOSPI200', symbol: '^KS11'}
+            { name: 'KOSPI200', symbol: '^KS200'}
         ];
 
         for (let index of indices) {
@@ -520,8 +562,15 @@ async function getMainStocks() {
             });
 
             fs.writeFileSync(`${index.name}_data.csv`, csvContent);
-            mainstocksInfo.push({name:index.name,value:'Saved to CSV'});
 
+            mainstocksInfo.push({
+                name:index.name,
+                value:'Saved to CSV',
+                csvUrl:`http://localhost:3000/download/${index.name}_data.csv`
+                // Replace "your-server-url" with your actual server's url.
+                // This url will directly download the corresponding file when accessed.
+
+            });
         }
 
     } catch(error) {
@@ -537,14 +586,21 @@ app.get('/mainstocks', async (req, res) => {
         mainstocksInfo=await getMainStocks();
     }catch(error){
         console.error("주식 데이터를 가져오는 중 오류 발생:", error);
+        mainstocksInfo=[];
     }
-    res.render("mainstocks",{mainstocksInfo : mainstocksInfo });
+
+    res.json(mainstocksInfo);
 });
 
 app.get('/download/:file', (req, res) => {
     const file = req.params.file;
     const filePath = path.join(__dirname, file);
-    res.download(filePath);
+
+    // Check if file exists before sending it
+    if(fs.existsSync(filePath))
+        res.download(filePath);
+    else
+        res.status(404).send("File not found");
 });
 
 app.listen(port, () => {

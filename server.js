@@ -566,7 +566,10 @@ async function getMainStocks() {
             mainstocksInfo.push({
                 name:index.name,
                 value:'Saved to CSV',
-                csvUrl:`/download/${index.name}_data.csv`
+                csvUrl:`http://localhost:3000/download/${index.name}_data.csv`
+                // Replace "your-server-url" with your actual server's url.
+                // This url will directly download the corresponding file when accessed.
+
             });
         }
 
@@ -592,7 +595,12 @@ app.get('/mainstocks', async (req, res) => {
 app.get('/download/:file', (req, res) => {
     const file = req.params.file;
     const filePath = path.join(__dirname, file);
-    res.download(filePath);
+
+    // Check if file exists before sending it
+    if(fs.existsSync(filePath))
+        res.download(filePath);
+    else
+        res.status(404).send("File not found");
 });
 
 app.listen(port, () => {
