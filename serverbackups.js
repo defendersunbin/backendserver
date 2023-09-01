@@ -566,6 +566,64 @@ app.post('/getStockInfo', async (req, res) => {
     });
 });
 
+app.post('/addData', (req, res) => {
+    let day_five_data = req.body.day_five;
+    let day_ten_data = req.body.day_ten;
+
+    // Query 작성
+    let sql_day_five_query = `INSERT INTO stocks (day_five) VALUES (${day_five_data.price})`;
+    let sql_day_ten_query = `INSERT INTO stocks (day_ten) VALUES (${day_ten_data.price})`;
+
+    // Query 실행 - day five data
+    connection.query(sql_day_five_query, function(err, result){
+        if(err) throw err;
+        console.log("5일치 예측 데이터가 추가되었습니다.");
+
+        // Query 실행 - day ten data
+        connection.query(sql_day_ten_query, function(err,result){
+            if(err) throw err;
+            console.log("10일치 예측 데이터가 추가되었습니다.");
+
+            res.send('데이터를 성공적으로 데이터베이스에 추가했습니다.');
+        });
+    });
+});
+
+app.get('/addSentiment', (req, res) => {
+    // Query 작성
+    let sql_sentiment_query = `SELECT * FROM stocks`;
+
+    // Query 실행 - sentiment data
+    connection.query(sql_sentiment_query, function(err, result){
+        if(err) throw err;
+        console.log("감성분석 결과를 가져왔습니다.");
+
+        res.send(result);
+    });
+});
+
+
+app.post('/addSentiment', (req, res) => {
+    // sentiment 값 유무 검사
+    if (!req.body.sentiment) {
+        return res.status(400).send('Missing sentiment value');
+    }
+
+    let sentiment_data = req.body.sentiment;
+
+    // Query 작성
+    let sql_sentiment_query = `INSERT INTO stocks (sentiment) VALUES ('${sentiment_data}')`;
+
+    // Query 실행 - sentiment data
+    connection.query(sql_sentiment_query, function(err, result){
+        if(err) throw err;
+        console.log("감성분석 결과가 추가되었습니다.");
+
+        res.send('데이터를 성공적으로 데이터베이스에 추가했습니다.');
+    });
+});
+
+
 
 async function getMainStocks() {
     let mainstocksInfo = [];
