@@ -1,0 +1,21 @@
+<%- include('header.ejs') %>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sentiment Analysis</title>
+</head>
+<body>
+
+<h1>Sentiment Analysis Result</h1>
+
+<% if(sentimentData) { %>
+    <p>The sentiment score is: <%= sentimentData.score %></p>
+<% } else { %>
+    <p>No data available.</p>
+<% } %>
+
+</body>
+</html>
+
+<%- include('footer.ejs') %>

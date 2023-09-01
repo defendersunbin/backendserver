@@ -16,11 +16,32 @@
     <button type="submit">종목 가져오기</button>
 </form>
 
+
 <% if (stockInfo) { %>
     <h2><%= stockInfo.stockName %> (종목코드: <%= stockInfo.stockCode %>)</h2>
     <p>현재 금액 (실시간): <%= stockInfo.currentPrice %>원</p>
     <p>변화폭: <%= stockInfo.change %>원</p>
     <p>변화율: <%= stockInfo.changePercentage %>%</p>
+
+    <!-- Add predicted prices -->
+    <p>5일 후 예상가격: <%= stockInfo.dayFivePredictedPrice %>원</p>
+    <p>10일 후 예상가격: <%= stockInfo.dayTenPredictedPrice %>원</p>
+
+    <!-- Add sentiment analysis result -->
+    <% if (stockInfo.sentiment > 0) { %>
+        <p>긍정적입니다. 매수를 추천합니다.</p>
+    <% } else if (stockInfo.sentiment === 0) { %>
+        <p>중립적입니다. 매수에 유의하십시요.</p>
+    <% } else { %>
+        <p>부정적입니다. 매수를 추천하지 않습니다.</p>
+    <% } %>
+
+    <!-- Add favorite status -->
+    <% if (stockInfo.isFavorite) { %>
+        <p>즐겨찾기에 등록된 종목입니다.</p>
+    <% } else { %>
+        <p>즐겨찾기에 등록되지 않은 종목입니다.</p>
+    <% } %>
 
     <!-- Add news search links -->
     <p><a href="<%= stockInfo.newsUrl %>">관련 뉴스 보기 - MK News </a></p>

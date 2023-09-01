@@ -265,14 +265,14 @@ app.post('/register', (req, res) => {
     if (pw.length < 8 || pw.length > 20) {
         res.send("<script> alert('비밀번호는 최소 8자리, 최대 20자리까지 설정해주세요.'); location.href='/register';</script>");
     } else {
-        var checkDuplicateSql = `SELECT * FROM member WHERE user_id=? OR name=?`;
-        var checkDuplicateValues=[user_id,name];
+        var checkDuplicateSql = `SELECT * FROM member WHERE user_id=?`;
+        var checkDuplicateValues=[user_id];
 
         connection.query(checkDuplicateSql,checkDuplicateValues,function(err,result){
             if(err) throw err;
 
             if(result.length>0){
-                res.send("<script> alert('이미 사용중인 회원입니다.'); location.href='/register';</script>");
+                res.send("<script> alert('이미 사용중인 아이디입니다.'); location.href='/register';</script>");
             } else {
                 bcrypt.hash(pw,saltRounds,function(err,hash){
                     if(err) throw err;
@@ -298,6 +298,7 @@ app.post('/register', (req, res) => {
         });
     }
 });
+
 
 app.get('/reset-password', function(req,res){
     res.render("reset-password", {resetQuestions: resetQuestions});
@@ -482,10 +483,15 @@ app.get('/stocks', (req, res) => {
 });
 
 app.post('/getStockInfo', async (req, res) => {
-    const stockName = req.body.stockName;
+    if (!req.session.member) {
+        return res.redirect('/login'); // 로그인 페이지로 리다이렉트
+    }
 
-    // MySQL에서 종목 코드 조회
-    const query = 'SELECT stockCode FROM stocks WHERE stockName = ?';
+    const stockName = req.body.stockName;
+    const user_id = req.session.member.user_id; // 현재 로그인한 사용자의 ID 가져오기
+
+    // MySQL에서 종목 코드와 감성 분석 결과 조회
+    const query = 'SELECT stockCode, sentiment, day_five, day_ten FROM stocks WHERE stockName = ?';
     connection.query(query, [stockName], async (err, results) => {
         if (err) {
             console.error('종목 코드 조회 중 오류 발생:', err);
@@ -500,41 +506,66 @@ app.post('/getStockInfo', async (req, res) => {
         }
 
         const stockCode = results[0].stockCode;
+        const sentiment = results[0].sentiment; // 감성 분석 결과 가져오기
+        const dayFivePredictedPrice = results[0].day_five; // 5일치 예측 가격 가져오기
+        const dayTenPredictedPrice = results[0].day_ten; // 10일치 예측 가격 가져오기
         const url = `https://finance.naver.com/item/main.nhn?code=${stockCode}`;
 
         try {
             const response = await axios.get(url);
             const $ = cheerio.load(response.data);
 
+            // 주식 정보 파싱하기
             const currentPrice = $('#chart_area > div.rate_info > div > p.no_today > em').text();
-            const change = $('#chart_area > div.rate_info > div > p.no_exday > em > span.blind').text();
-            const changePercentage=$('#chart_area>div.rate_info>div>p.no_exday>em>span.blind').next().text();
+            const changeElement = $('#chart_area > div.rate_info > div');
+            const changeSign = changeElement.find('em.no_exday').hasClass('up') ? '+' : (changeElement.find('em.no_exday').hasClass('down') ? '-' : '');
+            const change = changeSign + changeElement.find('p.no_exday em span.blind').text();
+            const changePercentage = changeSign + changeElement.find('p.no_exday em span.blind').next().text();
 
-            // Add news search urls
+
             var newsUrl=`https://www.mk.co.kr/search?word=${encodeURIComponent(stockName)}`;
             var magazineUrl=`https://magazine.hankyung.com/search?query=${encodeURIComponent(stockName)}`;
             var economistUrl=`https://economist.co.kr/article/search?searchText=${encodeURIComponent(stockName)}`;
 
-            // Add the news urls to the returned object
-            var stockInfo={
-                stockName:stockName,
-                stockCode:stockCode,
-                currentPrice:currentPrice,
-                change:change,
-                changePercentage:changePercentage,
-                newsUrl : newsUrl,
-                magazineUrl : magazineUrl,
-                economistUrl : economistUrl
-            };
+            // 즐겨찾기에 해당 주식이 있는지 확인
+            const favoriteQuery = 'SELECT * FROM favorites WHERE user_id=? AND title=?';
+            connection.query(favoriteQuery,[user_id,stockName],(err2,favoriteResults)=>{
+                if(err2){
+                    console.error("즐겨찾기 조회 중 오류 발생:", err2);
+                    res.render("stocks",{stockInfo:null});
+                    return;
+                }
 
-            res.render('stocks',{stockInfo : stockInfo});
+                var isFavorite=false;
 
+                if(favoriteResults.length>0){
+                    isFavorite=true;
+                }
+
+                var stockInfo={
+                    stockName:stockName,
+                    stockCode:stockCode,
+                    currentPrice:currentPrice,
+                    change:change,
+                    changePercentage:changePercentage,
+                    newsUrl : newsUrl,
+                    magazineUrl : magazineUrl,
+                    economistUrl : economistUrl,
+                    sentiment:sentiment,
+                    isFavorite:isFavorite,
+                    dayFivePredictedPrice: dayFivePredictedPrice,   // 5일치 예측 가격 추가
+                    dayTenPredictedPrice: dayTenPredictedPrice      // 10일치 예측 가격 추가
+                };
+
+                res.render('stocks',{stockInfo : stockInfo});
+            });
         } catch(error){
             console.error("주식 데이터를 가져오는 중 오류 발생:", error);
             res.render("stocks",{stockInfo:null});
         }
     });
 });
+
 
 async function getMainStocks() {
     let mainstocksInfo = [];
@@ -555,10 +586,10 @@ async function getMainStocks() {
                 period:'d'
             });
 
-            let csvContent = "Date,Open,High,Low,Close\n";
+            let csvContent = "Date, Close\n";
 
             data.forEach((row) => {
-                csvContent += `${row.date.toISOString().split('T')[0]},${row.open},${row.high},${row.low},${row.close}\n`;
+                csvContent += `${row.date.toISOString().split('T')[0]}, ${row.close}\n`;
             });
 
             fs.writeFileSync(`${index.name}_data.csv`, csvContent);
@@ -602,6 +633,24 @@ app.get('/download/:file', (req, res) => {
     else
         res.status(404).send("File not found");
 });
+
+let storedData = null; // 데이터 저장을 위한 변수
+
+app.get('/sentiment', (req, res) => {
+    if(storedData) {
+        res.status(200).json(storedData);
+    } else {
+        res.status(200).json({message: 'No data'});
+    }
+});
+
+app.post('/sentiment', (req, res) => {
+    const data = req.body;
+    console.log("Received JSON data:", data);
+    storedData = data; // 데이터 저장
+    res.status(200).json(data);
+});
+
 
 app.listen(port, () => {
     console.log(`서버가 실행되었습니다.`)
