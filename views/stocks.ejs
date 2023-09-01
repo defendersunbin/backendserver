@@ -23,18 +23,12 @@
     <p>변화폭: <%= stockInfo.change %>원</p>
     <p>변화율: <%= stockInfo.changePercentage %>%</p>
 
+    <!-- Add sentiment analysis result -->
+    <p>감성 분석 결과: <%= stockInfo.sentiment == 1 ? '긍정적입니다. 매수를 추천합니다.' : '부정적입니다. 매수를 추천하지 않습니다.' %></p>
+
     <!-- Add predicted prices -->
     <p>5일 후 예상가격: <%= stockInfo.dayFivePredictedPrice %>원</p>
     <p>10일 후 예상가격: <%= stockInfo.dayTenPredictedPrice %>원</p>
-
-    <!-- Add sentiment analysis result -->
-    <% if (stockInfo.sentiment > 0) { %>
-        <p>긍정적입니다. 매수를 추천합니다.</p>
-    <% } else if (stockInfo.sentiment === 0) { %>
-        <p>중립적입니다. 매수에 유의하십시요.</p>
-    <% } else { %>
-        <p>부정적입니다. 매수를 추천하지 않습니다.</p>
-    <% } %>
 
     <!-- Add favorite status -->
     <% if (stockInfo.isFavorite) { %>

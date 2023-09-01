@@ -19,6 +19,7 @@ var session = require('express-session')
 require('dotenv').config()
 
 const mysql = require('mysql2')
+const {httpOnly} = require("express-session/session/cookie");
 const connection = mysql.createConnection(process.env.DATABASE_URL)
 console.log('Connected to PlanetScale!')
 
@@ -151,7 +152,7 @@ app.post('/loginProc', async (req, res) => {
                     // Use the temporarily saved member info here.
                     req.session.member=memberInfoTemp;
 
-                    return res.send("<script> alert('로그인 되었습니다.'); location.href='/';</script>");
+                    //return res.send("<script> alert('로그인 되었습니다.'); location.href='/';</script>");
 
                 });
             } else {
@@ -161,6 +162,7 @@ app.post('/loginProc', async (req, res) => {
 
     });
 });
+
 
 app.post('/token', (req,res)=>{
     const refreshToken=req.cookies.refresh_token;
@@ -566,65 +568,6 @@ app.post('/getStockInfo', async (req, res) => {
     });
 });
 
-app.post('/addData', (req, res) => {
-    let day_five_data = req.body.day_five;
-    let day_ten_data = req.body.day_ten;
-
-    // Query 작성
-    let sql_day_five_query = `INSERT INTO stocks (day_five) VALUES (${day_five_data.price})`;
-    let sql_day_ten_query = `INSERT INTO stocks (day_ten) VALUES (${day_ten_data.price})`;
-
-    // Query 실행 - day five data
-    connection.query(sql_day_five_query, function(err, result){
-        if(err) throw err;
-        console.log("5일치 예측 데이터가 추가되었습니다.");
-
-        // Query 실행 - day ten data
-        connection.query(sql_day_ten_query, function(err,result){
-            if(err) throw err;
-            console.log("10일치 예측 데이터가 추가되었습니다.");
-
-            res.send('데이터를 성공적으로 데이터베이스에 추가했습니다.');
-        });
-    });
-});
-
-app.get('/addSentiment', (req, res) => {
-    // Query 작성
-    let sql_sentiment_query = `SELECT * FROM stocks`;
-
-    // Query 실행 - sentiment data
-    connection.query(sql_sentiment_query, function(err, result){
-        if(err) throw err;
-        console.log("감성분석 결과를 가져왔습니다.");
-
-        res.send(result);
-    });
-});
-
-
-app.post('/addSentiment', (req, res) => {
-    // sentiment 값 유무 검사
-    if (!req.body.sentiment) {
-        return res.status(400).send('Missing sentiment value');
-    }
-
-    let sentiment_data = req.body.sentiment;
-
-    // Query 작성
-    let sql_sentiment_query = `INSERT INTO stocks (sentiment) VALUES ('${sentiment_data}')`;
-
-    // Query 실행 - sentiment data
-    connection.query(sql_sentiment_query, function(err, result){
-        if(err) throw err;
-        console.log("감성분석 결과가 추가되었습니다.");
-
-        res.send('데이터를 성공적으로 데이터베이스에 추가했습니다.');
-    });
-});
-
-
-
 async function getMainStocks() {
     let mainstocksInfo = [];
     try {
@@ -694,15 +637,287 @@ app.get('/download/:file', (req, res) => {
 
 let storedData = null; // 데이터 저장을 위한 변수
 
-app.get('/sentiment', (req, res) => {
-    if(storedData) {
-        res.status(200).json(storedData);
-    } else {
-        res.status(200).json({message: 'No data'});
+
+
+app.get('/stocks', async (req, res) => {
+    let stockNamesQuery = `SELECT stockName FROM stocks;`;
+    let stockNames = [];
+
+    // Get all the stock names from the database
+    try {
+        const [rows] = await connection.promise().query(stockNamesQuery);
+        stockNames = rows.map(row => row.stockName);
+    } catch (err) {
+        console.log("An error occurred performing the query.");
+        return res.status(500).send('Database query error');
+    }
+
+    let promises = [];
+    let results = {};
+
+    for (let stockName of stockNames) {
+        const sqlQuery = `SELECT sentiment FROM stocks WHERE stockName=?;`;
+
+        let promise = new Promise((resolve, reject) => {
+            connection.query(sqlQuery, [stockName], function(err, rows){
+                if(err){
+                    console.log("An error occurred performing the query.");
+                    reject(new Error('Database query error'));
+                } else {
+                    console.log("Query successfully executed");
+                    results[stockName] = rows[0].sentiment;
+                    resolve();
+                }
+            });
+        });
+
+        promises.push(promise);
+    }
+
+    try{
+        await Promise.all(promises);
+        res.status(200).json(results);
+    } catch(error){
+        res.status(500).send(error.message);
     }
 });
 
-app.post('/sentiment', (req, res) => {
+
+app.get('/sentiment', async (req, res) => {
+    const stockName = req.query.stockName;  // URL 쿼리 파라미터에서 주식 이름 가져오기
+
+    if (!stockName) {
+        res.render('stocks');  // 주식 이름이 제공되지 않았으면 빈 페이지 렌더링
+        return;
+    }
+
+    const sqlQuery = `SELECT * FROM stocks WHERE stockName=?;`;
+
+    connection.query(sqlQuery, [stockName], function(err, rows){
+        if(err){
+            console.log("An error occurred performing the query:");
+            console.log(err);  // 에러 객체 출력
+            res.status(500).send(err.message);
+        } else {
+            console.log("Query successfully executed");
+            if(rows.length > 0) {
+                let stockInfo = rows[0];
+                let sentimentDescription = "";
+                if(stockInfo.sentiment > 0) {
+                    sentimentDescription = "긍정적입니다.";
+                } else {
+                    sentimentDescription = "부정적입니다.";
+                }
+                stockInfo.sentimentDescription = sentimentDescription;
+
+                res.render('stocks', {
+                    stockInfo: stockInfo
+                });  // EJS 템플릿에 데이터 전달하여 페이지 렌더링
+            } else {
+                res.status(404).send('Stock not found');
+            }
+        }
+    });
+});
+
+
+app.post('/sentiment', async (req, res) => {
+    let jsonData = req.body.sentiment;
+    let promises = [];
+
+    for (let stock in jsonData) {
+        let sentiment = jsonData[stock];
+
+        const sqlQuery = `INSERT INTO stocks (stockName, sentiment) VALUES (?, ?)
+                          ON DUPLICATE KEY UPDATE sentiment=?;`;
+
+        let promise = new Promise((resolve, reject) => {
+            connection.query(sqlQuery, [stock, sentiment, sentiment], function(err){
+                if(err){
+                    console.log("An error occurred performing the query:");
+                    console.log(err);  // 에러 객체 출력
+                    reject(new Error('Database query error'));
+                } else {
+                    console.log("Query successfully executed");
+                    resolve();
+                }
+            });
+        });
+
+        promises.push(promise);
+    }
+
+    try {
+        await Promise.all(promises);
+        res.status(200).json(jsonData);
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+});
+
+app.get('/day_five', async (req, res) => {
+    const stockName = req.query.stockName;  // URL 쿼리 파라미터에서 주식 이름 가져오기
+
+    if (!stockName) {
+        res.render('stocks');  // 주식 이름이 제공되지 않았으면 빈 페이지 렌더링
+        return;
+    }
+
+    const sqlQuery = `SELECT * FROM stocks WHERE stockName=?;`;
+
+    connection.query(sqlQuery, [stockName], function(err, rows){
+        if(err){
+            console.log("An error occurred performing the query:");
+            console.log(err);  // 에러 객체 출력
+            res.status(500).send(err.message);
+        } else {
+            console.log("Query successfully executed");
+            if(rows.length > 0) {
+                let stockInfo = rows[0];
+                let dayFiveDescription = "";
+                if(stockInfo.day_five > 0) {
+                    dayFiveDescription = "긍정적입니다.";
+                } else {
+                    dayFiveDescription = "부정적입니다.";
+                }
+                stockInfo.dayFiveDescription = dayFiveDescription;
+
+                res.render('stocks', {
+                    stockInfo: stockInfo
+                });  // EJS 템플릿에 데이터 전달하여 페이지 렌더링
+            } else {
+                res.status(404).send('Stock not found');
+            }
+        }
+    });
+});
+
+
+app.post('/day_five', async (req, res) => {
+    let jsonData = req.body.day_five;
+    let promises = [];
+
+    for (let stock in jsonData) {
+        let dayFiveValue = jsonData[stock];
+
+        const sqlQuery = `INSERT INTO stocks (stockName, day_five) VALUES (?, ?)
+                          ON DUPLICATE KEY UPDATE day_five=?;`;
+
+        let promise = new Promise((resolve, reject) => {
+
+            connection.query(sqlQuery, [stock, dayFiveValue ,dayFiveValue], function(err){
+                if(err){
+                    console.log("An error occurred performing the query:");
+                    console.log(err);  // 에러 객체 출력
+                    reject(new Error('Database query error'));
+                } else {
+                    console.log("Query successfully executed");
+                    resolve();
+                }
+            });
+
+        });
+
+        promises.push(promise);
+    }
+
+    try{
+        await Promise.all(promises);
+        res.status(200).json(jsonData);
+    } catch(error){
+        res.status(500).send(error.message);
+    }
+});
+
+
+app.get('/day_ten', async (req, res) => {
+    const stockName = req.query.stockName;  // URL 쿼리 파라미터에서 주식 이름 가져오기
+
+    if (!stockName) {
+        res.render('stocks');  // 주식 이름이 제공되지 않았으면 빈 페이지 렌더링
+        return;
+    }
+
+    const sqlQuery = `SELECT * FROM stocks WHERE stockName=?;`;
+
+    connection.query(sqlQuery, [stockName], function(err, rows){
+        if(err){
+            console.log("An error occurred performing the query:");
+            console.log(err);  // 에러 객체 출력
+            res.status(500).send(err.message);
+        } else {
+            console.log("Query successfully executed");
+            if(rows.length > 0) {
+                let stockInfo = rows[0];
+                res.render('stocks', {
+                    stockInfo: stockInfo
+                });  // EJS 템플릿에 데이터 전달하여 페이지 렌더링
+            } else {
+                res.status(404).send('Stock not found');
+            }
+        }
+    });
+});
+
+
+app.post('/day_ten', async (req, res) => {
+    let jsonData = req.body.day_ten;
+
+    if(!Array.isArray(jsonData)) {
+        return res.status(400).json({error: 'Invalid data format. Expecting an array.'});
+    }
+
+    let promises = [];
+
+    for (let i=0; i<jsonData.length; i++) {
+
+        let date10DayTenPair = jsonData[i];
+
+        if(!Array.isArray(date10DayTenPair) || date10DayTenPair.length !==2 ) {
+            continue;
+            // or you may want to stop and send an error message.
+            // return res.status(400).json({error: 'Invalid data format in the array.'});
+        }
+
+        const sqlQuery = `INSERT INTO stocks (stockName, day_ten) VALUES (?, ?)
+                          ON DUPLICATE KEY UPDATE day_ten=?;`;
+
+        let promise = new Promise((resolve, reject) => {
+
+            connection.query(sqlQuery, [...date10DayTenPair,date10DayTenPair[1]], function(err){
+                if(err){
+                    console.log("An error occurred performing the query:");
+                    console.log(err);  // 에러 객체 출력
+                    reject(new Error('Database query error'));
+                } else {
+                    console.log("Query successfully executed");
+                    resolve();
+                }
+            });
+
+        });
+
+        promises.push(promise);
+    }
+
+    try{
+        await Promise.all(promises);
+        res.status(200).json(jsonData);
+    } catch(error){
+        res.status(500).send(error.message);
+    }
+});
+
+
+app.get('/asentiment', (req, res) => {
+    if(storedData) {
+        res.render('asentiment', { sentimentData: storedData });
+    } else {
+        res.render('asentiment', { sentimentData: { message: 'No data' } });
+    }
+});
+
+app.post('/asentiment', (req, res) => {
     const data = req.body;
     console.log("Received JSON data:", data);
     storedData = data; // 데이터 저장
