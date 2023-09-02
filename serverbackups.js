@@ -600,7 +600,7 @@ app.post('/getStockInfo', async (req, res) => {
     const user_id = req.session.member.user_id; // 현재 로그인한 사용자의 ID 가져오기
 
     // MySQL에서 종목 코드와 감성 분석 결과 조회
-    const query = 'SELECT stockCode, sentiment, day1_5, day2_5, day3_5, day4_5, day5_5, day1_10, day2_10, day3_10, day4_10, day5_10 ,day6_10 ,day7_10 ,day8_10 ,day9_10 ,day10_10 FROM stocks WHERE stockName = ?';
+    const query = 'SELECT stockCode, sentiment, day1_5_date, day2_5_date, day3_5_date, day4_5_date, day5_5_date, day1_10_date, day2_10_date, day3_10_date, day4_10_date, day5_10_date ,day6_10_date ,day7_10_date ,day8_10_date ,day9_10_date ,day10_10_date, day1_5_price, day2_5_price, day3_5_price, day4_5_price, day5_5_price, day1_10_price, day2_10_price, day3_10_price,day4_10_price,day5_10_price,day6_10_price,day7_10_price,day8_10_price,day9_10_price,day10_10_price FROM stocks WHERE stockName = ?';
 
     connection.query(query,[stockName], async (err,result)=>{
         if(err){
@@ -613,24 +613,75 @@ app.post('/getStockInfo', async (req, res) => {
             return  res.json({stockInfo:null});
         }
 
+        const predict5 = {
+            day1_5PredictedPrice : result[0].day1_5_price,
+            day2_5PredictedPrice : result[0].day2_5_price,
+            day3_5PredictedPrice : result[0].day3_5_price,
+            day4_5PredictedPrice : result[0].day4_5_price,
+            day5_5PredictedPrice : result[0].day5_5_price,
+            day1_5Date : result[0].day1_5_date,
+            day2_5Date : result[0].day2_5_date,
+            day3_5Date : result[0].day3_5_date,
+            day4_5Date : result[0].day4_5_date,
+            day5_5Date : result[0].day5_5_date,
+        }
+
+        const predict10 = {
+            day1_10PredictedPrice : result[0].day1_10_price,
+            day2_10PredictedPrice : result[0].day2_10_price,
+            day3_10PredictedPrice : result[0].day3_10_price,
+            day4_10PredictedPrice : result[0].day4_10_price,
+            day5_10PredictedPrice : result[0].day5_10_price,
+            day6_10PredictedPrice : result[0].day6_10_price,
+            day7_10PredictedPrice : result[0].day7_10_price,
+            day8_10PredictedPrice : result[0].day8_10_price,
+            day9_10PredictedPrice : result[0].day9_10_price,
+            day10_10PredictedPrice : result[0].day10_10_price,
+            day1_10Date : result[0].day1_10_date,
+            day2_10Date : result[0].day2_10_date,
+            day3_10Date : result[0].day3_10_date,
+            day4_10Date : result[0].day4_10_date,
+            day5_10Date : result[0].day5_10_date,
+            day6_10Date : result[0].day6_10_date,
+            day7_10Date : result[0].day7_10_date,
+            day8_10Date : result[0].day8_10_date,
+            day9_10Date : result[0].day9_10_date,
+            day10_10Date : result[0].day10_10_date,
+        }
+
         const stockCode = result[0].stockCode;
         const sentiment = result[0].sentiment; // 감성 분석 결과 가져오기
-        const day1_5PredictedPrice = result[0].day1_5;
-        const day2_5PredictedPrice = result[0].day2_5;
-        const day3_5PredictedPrice = result[0].day3_5;
-        const day4_5PredictedPrice = result[0].day4_5;
-        const day5_5PredictedPrice = result[0].day5_5;
-        const day1_10PredictedPrice = result[0].day1_10;
-        const day2_10PredictedPrice = result[0].day2_10;
-        const day3_10PredictedPrice = result[0].day3_10;
-        const day4_10PredictedPrice = result[0].day4_10;
-        const day5_10PredictedPrice = result[0].day5_10;
-        const day6_10PredictedPrice = result[0].day6_10;
-        const day7_10PredictedPrice = result[0].day7_10;
-        const day8_10PredictedPrice = result[0].day8_10;
-        const day9_10PredictedPrice = result[0].day9_10;
-        const day10_10PredictedPrice = result[0].day10_10;
         const url = `https://finance.naver.com/item/main.nhn?code=${stockCode}`;
+        //const day1_5PredictedPrice = result[0].day1_5_price;
+        //const day2_5PredictedPrice = result[0].day2_5_price;
+        //const day3_5PredictedPrice = result[0].day3_5_price;
+        //const day4_5PredictedPrice = result[0].day4_5_price;
+        //const day5_5PredictedPrice = result[0].day5_5_price;
+        //const day1_10PredictedPrice = result[0].day1_10_price;
+        //const day2_10PredictedPrice = result[0].day2_10_price;
+        //const day3_10PredictedPrice = result[0].day3_10_price;
+        //const day4_10PredictedPrice = result[0].day4_10_price;
+        //const day5_10PredictedPrice = result[0].day5_10_price;
+        //const day6_10PredictedPrice = result[0].day6_10_price;
+        //const day7_10PredictedPrice = result[0].day7_10_price;
+        //const day8_10PredictedPrice = result[0].day8_10_price;
+        //const day9_10PredictedPrice = result[0].day9_10_price;
+        //const day10_10PredictedPrice = result[0].day10_10_price;
+        //const day1_5Date = result[0].day1_5_date;
+        //const day2_5Date = result[0].day2_5_date;
+        //const day3_5Date = result[0].day3_5_date;
+        //const day4_5Date = result[0].day4_5_date;
+        //const day5_5Date = result[0].day5_5_date;
+        //const day1_10Date = result[0].day1_10_date;
+        //const day2_10Date = result[0].day2_10_date;
+        //const day3_10Date = result[0].day3_10_date;
+        //const day4_10Date = result[0].day4_10_date;
+        //const day5_10Date = result[0].day5_10_date;
+        //const day6_10Date = result[0].day6_10_date;
+        //const day7_10Date = result[0].day7_10_date;
+        //const day8_10Date = result[0].day8_10_date;
+        //const day9_10Date = result[0].day9_10_date;
+        //const day10_10Date = result[0].day10_10_date;
 
         try {
             const response = await axios.get(url);
@@ -642,7 +693,6 @@ app.post('/getStockInfo', async (req, res) => {
             const changeSign = changeElement.find('em.no_exday').hasClass('up') ? '+' : (changeElement.find('em.no_exday').hasClass('down') ? '-' : '');
             const change = changeSign + changeElement.find('p.no_exday em span.blind').text();
             const changePercentage = changeSign + changeElement.find('p.no_exday em span.blind').next().text();
-
 
             var newsUrl=`https://www.mk.co.kr/search?word=${encodeURIComponent(stockName)}`;
             var magazineUrl=`https://magazine.hankyung.com/search?query=${encodeURIComponent(stockName)}`;
@@ -673,26 +723,69 @@ app.post('/getStockInfo', async (req, res) => {
                     economistUrl : economistUrl,
                     sentiment:sentiment,
                     isFavorite:isFavorite,
-                    // 5일치 예측 가격 추가
-                    day1_5PredictedPrice: day1_5PredictedPrice,
-                    day2_5PredictedPrice: day2_5PredictedPrice,
-                    day3_5PredictedPrice: day3_5PredictedPrice,
-                    day4_5PredictedPrice: day4_5PredictedPrice,
-                    day5_5PredictedPrice: day5_5PredictedPrice,
-                    day1_10PredictedPrice: day1_10PredictedPrice,
-                    day2_10PredictedPrice: day2_10PredictedPrice,
-                    day3_10PredictedPrice: day3_10PredictedPrice,
-                    day4_10PredictedPrice: day4_10PredictedPrice,
-                    day5_10PredictedPrice: day5_10PredictedPrice,
-                    day6_10PredictedPrice: day6_10PredictedPrice,
-                    day7_10PredictedPrice: day7_10PredictedPrice,
-                    day8_10PredictedPrice: day8_10PredictedPrice,
-                    day9_10PredictedPrice: day9_10PredictedPrice,
-                    day10_10PredictedPrice: day10_10PredictedPrice,
-
+                    // 5일치 예측 가격
+                    day1_5PredictedPrice: predict5.day1_5PredictedPrice,
+                    day2_5PredictedPrice: predict5.day2_5PredictedPrice,
+                    day3_5PredictedPrice: predict5.day3_5PredictedPrice,
+                    day4_5PredictedPrice: predict5.day4_5PredictedPrice,
+                    day5_5PredictedPrice: predict5.day5_5PredictedPrice,
+                    //10일치 예측 가격
+                    day1_10PredictedPrice: predict10.day1_10PredictedPrice,
+                    day2_10PredictedPrice: predict10.day2_10PredictedPrice,
+                    day3_10PredictedPrice: predict10.day3_10PredictedPrice,
+                    day4_10PredictedPrice: predict10.day4_10PredictedPrice,
+                    day5_10PredictedPrice: predict10.day5_10PredictedPrice,
+                    day6_10PredictedPrice: predict10.day6_10PredictedPrice,
+                    day7_10PredictedPrice: predict10.day7_10PredictedPrice,
+                    day8_10PredictedPrice: predict10.day8_10PredictedPrice,
+                    day9_10PredictedPrice: predict10.day9_10PredictedPrice,
+                    day10_10PredictedPrice: predict10.day10_10PredictedPrice,
+                    //5일치 날짜
+                    day1_5Date: predict5.day1_5Date,
+                    day2_5Date: predict5.day2_5Date,
+                    day3_5Date: predict5.day3_5Date,
+                    day4_5Date: predict5.day4_5Date,
+                    day5_5Date: predict5.day5_5Date,
+                    //10일치 날짜
+                    day1_10Date: predict10.day1_10Date,
+                    day2_10Date: predict10.day2_10Date,
+                    day3_10Date: predict10.day3_10Date,
+                    day4_10Date: predict10.day4_10Date,
+                    day5_10Date: predict10.day5_10Date,
+                    day6_10Date: predict10.day6_10Date,
+                    day7_10Date: predict10.day7_10Date,
+                    day8_10Date: predict10.day8_10Date,
+                    day9_10Date: predict10.day9_10Date,
+                    day10_10Date: predict10.day10_10Date,
                 };
 
                 return res.json({stockInfo : stockInfo});
+
+                /* 사용자 정보를 JSON 형태로 응답 */
+                //const responseBody={
+                //    "user_id":memberInfoTemp.user_id,
+                //    "pw":memberInfoTemp.pw,
+                //    "name":memberInfoTemp.name,
+                //    "message":'로그인 되었습니다.',
+                //    "redirectUrl":'/'
+                //};
+
+                const responseBody = {
+                    "stockName": stockName,
+                    "stockCode":stockCode,
+                    "currentPrice":currentPrice,
+                    "change":change,
+                    "changePercentage":changePercentage,
+                    "newsUrl" : newsUrl,
+                    "magazineUrl" : magazineUrl,
+                    "economistUrl" : economistUrl,
+                    "sentiment": sentiment,
+                    "predict5": predict5,
+                    "predict10": predict10
+                }
+
+                return res.json(responseBody);
+
             });
         } catch(error){
             console.error("주식 데이터를 가져오는 중 오류 발생:", error);
@@ -927,7 +1020,7 @@ app.post('/day_five', async (req, res) => {
     for (let stock in jsonData) {
         let dayFiveValue = jsonData[stock];
 
-        const sqlQuery = `INSERT INTO stocks (stockName, day1_5, day2_5, day3_5, day4_5, day5_5) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE day1_5=?, day2_5=?, day3_5=?, day4_5=?,day5_5=?`;
+        const sqlQuery = `INSERT INTO stocks (stockName, day1_5_date, day2_5_date, day3_5_date, day4_5_date, day5_5_date, day1_5_price, day2_5_price, day3_5_price, day4_5_price, day5_5_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE day1_5_price=?, day2_5_price=?, day3_5_price=?, day4_5_price=?,day5_5_price=?, day1_5_date=?, day2_5_date=?, day3_5_date=?, day4_5_date=?. day5_5_date=?`;
 
         let promise = new Promise((resolve, reject) => {
 
@@ -1004,7 +1097,7 @@ app.post('/day_ten', async (req, res) => {
             return res.status(400).json({error: 'Invalid data format. Expecting an array of length 10.'});
         }
 
-        const sqlQuery = `INSERT INTO stocks (stockName, day1_10, day2_10, day3_10, day4_10, day5_10, day6_10, day7_10,day8_10,day9_10 ,day10_10 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?,?,?,?)ON DUPLICATE KEY UPDATE day1_10=?, day2_10=?, day3_10=?, day4_10=?, day5_10=?, day6_10_=?, day7_10_=?, day8_10 =?, day9_10 =?, day10_10 =?`;
+        const sqlQuery = `INSERT INTO stocks (stockName, day1_10_price, day2_10_price, day3_10_price, day4_10_price, day5_10_price, day6_10_price, day7_10_price,day8_10_price,day9_10_price ,day10_10_price, day1_10_date,day2_10_date,day3_10_date,day4_10_date,day5_10_date,day6_10_date,day7_10_date,day8_10_date,day9_10_date,day10_10_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)ON DUPLICATE KEY UPDATE day1_10_price=?, day2_10_price=?, day3_10_price=?, day4_10_price=?, day5_10_price=?, day6_10_price_=?, day7_10_price_=?, day8_10_price =?, day9_10_price =?, day10_10_price =?, day1_10_date =?,day2_10_date =?,day3_10_date =?,day4_10_date =?,day5_10_date =?,day6_10_date =?,day7_10_date =?,day8_10_date =?,day9_10_date =?, day10_10_date =?`;
 
 
         let promise = new Promise((resolve,reject)=>{
