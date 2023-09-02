@@ -26,20 +26,25 @@
     <!-- Add sentiment analysis result -->
     <p>감성 분석 결과: <%= stockInfo.sentiment == 1 ? '긍정적입니다. 매수를 추천합니다.' : '부정적입니다. 매수를 추천하지 않습니다.' %></p>
 
+
     <!-- Add predicted prices -->
     <% for(let i = 1; i <= 5; i++) { %>
         <p>여기는 5일치 결과값입니다.</p>
-        <% const dayKey = 'day' + i + '_5PredictedPrice'; %>
-        <% if(stockInfo[dayKey]) { %><br/>
-        <p><%= i %>일 후 예상가격(5일치): <%= stockInfo[dayKey] %>원 </p>
+        <% const priceKey = 'day' + i + '_5PredictedPrice'; %>
+        <% const dayKey = 'day' + i + '_5Date'; %>
+        <% if(stockInfo[priceKey]) { %><br/>
+        <p><%= i %>일 후 예상가격(5일치): <%= stockInfo[priceKey] %>원 </p>
+        <p>예상 날짜: <%= stockInfo[dayKey] %> </p>
         <% }%>
     <% }%>
 
     <% for(let i = 1; i <= 10; i++) { %>
         <p>여기는 10일치 결과값입니다.</p>
-        <% const dayKey = 'day' + i + '_10PredictedPrice'; %>
-        <% if(stockInfo[dayKey]) { %><br/>
-        <p><%= i %>일 후 예상가격(10일치): <%= stockInfo[dayKey] %>원 </p>
+        <% const priceKey = 'day' + i + '_10PredictedPrice'; %>
+        <% const dayKey = 'day' + i + '_10Date'; %>
+        <% if(stockInfo[priceKey]) { %><br/>
+        <p><%= i %>일 후 예상가격(5일치): <%= stockInfo[priceKey] %>원 </p>
+        <p>예상 날짜: <%= stockInfo[dayKey] %> </p>
         <% }%>
     <% }%>
 

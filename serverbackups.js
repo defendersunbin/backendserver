@@ -592,12 +592,7 @@ app.get('/stocks', (req, res) => {
 });
 
 app.post('/getStockInfo', async (req, res) => {
-    if (!req.session.member) {
-        return res.json({redirect: '/login'}); // 로그인 페이지로 리다이렉트
-    }
-
     const stockName = req.body.stockName;
-    const user_id = req.session.member.user_id; // 현재 로그인한 사용자의 ID 가져오기
 
     // MySQL에서 종목 코드와 감성 분석 결과 조회
     const query = 'SELECT stockCode, sentiment, day1_5_date, day2_5_date, day3_5_date, day4_5_date, day5_5_date, day1_10_date, day2_10_date, day3_10_date, day4_10_date, day5_10_date ,day6_10_date ,day7_10_date ,day8_10_date ,day9_10_date ,day10_10_date, day1_5_price, day2_5_price, day3_5_price, day4_5_price, day5_5_price, day1_10_price, day2_10_price, day3_10_price,day4_10_price,day5_10_price,day6_10_price,day7_10_price,day8_10_price,day9_10_price,day10_10_price FROM stocks WHERE stockName = ?';
