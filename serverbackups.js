@@ -668,9 +668,16 @@ app.post('/getStockInfo', async (req, res) => {
             const $ = cheerio.load(response.data);
 
             // 주식 정보 파싱하기
-            const currentPrice = currentPrice.replace(/\D/g,'');
-            const change = change.replace(/\D/g,'');
-            const changePercentage = changePercentage.replace(/\D/g,'');
+            let currentPrice = $('#chart_area .rate_info .no_today .blind').first().text();
+            let changeElement = $('#chart_area > div.rate_info > div');
+            const changeSign = changeElement.find('em.no_exday').hasClass('up') ? '+' : (changeElement.find('em.no_exday').hasClass('down') ? '-' : '');
+            let change = changeSign + changeElement.find('p.no_exday em span.blind').text();
+            let changePercentage = changeSign + changeElement.find('p.no_exday em span.blind').next().text();
+
+            // 숫자만 추출하기
+            currentPrice = currentPrice.replace(/\D/g,'');
+            change = change.replace(/\D/g,'');
+            changePercentage = changePercentage.replace(/\D/g,'');
 
             var newsUrl=`https://www.mk.co.kr/search?word=${encodeURIComponent(stockName)}`;
             var magazineUrl=`https://magazine.hankyung.com/search?query=${encodeURIComponent(stockName)}`;
@@ -686,40 +693,42 @@ app.post('/getStockInfo', async (req, res) => {
                     magazineUrl : magazineUrl,
                     economistUrl : economistUrl,
                     sentiment:sentiment,
+                    predict5Prices: predict5Prices,
+                    predict10Prices: predict10Prices,
                     // 5일치 예측 가격
-                    day1_5PredictedPrice: predict5Prices.day1_5PredictedPrice,
-                    day2_5PredictedPrice: predict5Prices.day2_5PredictedPrice,
-                    day3_5PredictedPrice: predict5Prices.day3_5PredictedPrice,
-                    day4_5PredictedPrice: predict5Prices.day4_5PredictedPrice,
-                    day5_5PredictedPrice: predict5Prices.day5_5PredictedPrice,
+                    //day1_5PredictedPrice: predict5Prices.day1_5PredictedPrice,
+                    //day2_5PredictedPrice: predict5Prices.day2_5PredictedPrice,
+                    //day3_5PredictedPrice: predict5Prices.day3_5PredictedPrice,
+                    //day4_5PredictedPrice: predict5Prices.day4_5PredictedPrice,
+                    //day5_5PredictedPrice: predict5Prices.day5_5PredictedPrice,
                     //10일치 예측 가격
-                    day1_10PredictedPrice: predict10Prices.day1_10PredictedPrice,
-                    day2_10PredictedPrice: predict10Prices.day2_10PredictedPrice,
-                    day3_10PredictedPrice: predict10Prices.day3_10PredictedPrice,
-                    day4_10PredictedPrice: predict10Prices.day4_10PredictedPrice,
-                    day5_10PredictedPrice: predict10Prices.day5_10PredictedPrice,
-                    day6_10PredictedPrice: predict10Prices.day6_10PredictedPrice,
-                    day7_10PredictedPrice: predict10Prices.day7_10PredictedPrice,
-                    day8_10PredictedPrice: predict10Prices.day8_10PredictedPrice,
-                    day9_10PredictedPrice: predict10Prices.day9_10PredictedPrice,
-                    day10_10PredictedPrice: predict10Prices.day10_10PredictedPrice,
+                    //day1_10PredictedPrice: predict10Prices.day1_10PredictedPrice,
+                    //day2_10PredictedPrice: predict10Prices.day2_10PredictedPrice,
+                    //day3_10PredictedPrice: predict10Prices.day3_10PredictedPrice,
+                    //day4_10PredictedPrice: predict10Prices.day4_10PredictedPrice,
+                    //day5_10PredictedPrice: predict10Prices.day5_10PredictedPrice,
+                    //day6_10PredictedPrice: predict10Prices.day6_10PredictedPrice,
+                    //day7_10PredictedPrice: predict10Prices.day7_10PredictedPrice,
+                    //day8_10PredictedPrice: predict10Prices.day8_10PredictedPrice,
+                    //day9_10PredictedPrice: predict10Prices.day9_10PredictedPrice,
+                    //day10_10PredictedPrice: predict10Prices.day10_10PredictedPrice,
                     //5일치 날짜
-                    day1_5Date: predict5Prices.day1_5Date,
-                    day2_5Date: predict5Prices.day2_5Date,
-                    day3_5Date: predict5Prices.day3_5Date,
-                    day4_5Date: predict5Prices.day4_5Date,
-                    day5_5Date: predict5Prices.day5_5Date,
+                    //day1_5Date: predict5Prices.day1_5Date,
+                    //day2_5Date: predict5Prices.day2_5Date,
+                    //day3_5Date: predict5Prices.day3_5Date,
+                    //day4_5Date: predict5Prices.day4_5Date,
+                    //day5_5Date: predict5Prices.day5_5Date,
                     //10일치 날짜
-                    day1_10Date: predict10Prices.day1_10Date,
-                    day2_10Date: predict10Prices.day2_10Date,
-                    day3_10Date: predict10Prices.day3_10Date,
-                    day4_10Date: predict10Prices.day4_10Date,
-                    day5_10Date: predict10Prices.day5_10Date,
-                    day6_10Date: predict10Prices.day6_10Date,
-                    day7_10Date: predict10Prices.day7_10Date,
-                    day8_10Date: predict10Prices.day8_10Date,
-                    day9_10Date: predict10Prices.day9_10Date,
-                    day10_10Date: predict10Prices.day10_10Date,
+                    //day1_10Date: predict10Prices.day1_10Date,
+                    //day2_10Date: predict10Prices.day2_10Date,
+                    //day3_10Date: predict10Prices.day3_10Date,
+                    //day4_10Date: predict10Prices.day4_10Date,
+                    //day5_10Date: predict10Prices.day5_10Date,
+                    //day6_10Date: predict10Prices.day6_10Date,
+                    //day7_10Date: predict10Prices.day7_10Date,
+                    //day8_10Date: predict10Prices.day8_10Date,
+                    //day9_10Date: predict10Prices.day9_10Date,
+                    //day10_10Date: predict10Prices.day10_10Date,
                 };
 
                 return res.json({stockInfo : stockInfo});
