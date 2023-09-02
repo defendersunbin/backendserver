@@ -797,7 +797,7 @@ async function getMainStocks() {
             mainstocksInfo.push({
                 name:index.name,
                 value:'Saved to CSV',
-                csvUrl:`http://localhost:3000/download/${index.name}_data.csv`
+                csvUrl:`https://cf51-39-118-146-59.ngrok-free.app/download/${index.name}_data.csv`
                 // Replace "your-server-url" with your actual server's url.
                 // This url will directly download the corresponding file when accessed.
 
