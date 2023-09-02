@@ -852,8 +852,6 @@ app.get('/download/:file', (req, res) => {
 
 let storedData = null; // 데이터 저장을 위한 변수
 
-
-
 app.get('/stocks', async (req, res) => {
     let stockNamesQuery = `SELECT stockName FROM stocks;`;
     let stockNames = [];
@@ -1092,7 +1090,7 @@ app.post('/day_ten', async (req, res) => {
             return res.status(400).json({error: 'Invalid data format. Expecting an array of length 10.'});
         }
 
-        const sqlQuery = `INSERT INTO stocks (stockName, day1_10_price, day2_10_price, day3_10_price, day4_10_price, day5_10_price, day6_10_price, day7_10_price,day8_10_price,day9_10_price ,day10_10_price, day1_10_date,day2_10_date,day3_10_date,day4_10_date,day5_10_date,day6_10_date,day7_10_date,day8_10_date,day9_10_date,day10_10_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)ON DUPLICATE KEY UPDATE day1_10_price=?, day2_10_price=?, day3_10_price=?, day4_10_price=?, day5_10_price=?, day6_10_price_=?, day7_10_price_=?, day8_10_price =?, day9_10_price =?, day10_10_price =?, day1_10_date =?,day2_10_date =?,day3_10_date =?,day4_10_date =?,day5_10_date =?,day6_10_date =?,day7_10_date =?,day8_10_date =?,day9_10_date =?, day10_10_date =?`;
+        const sqlQuery = `INSERT INTO stocks (stockName, day1_10_price, day2_10_price, day3_10_price, day4_10_price, day5_10_price, day6_10_price, day7_10_price, day8_10_price, day9_10_price, day10_10_price, day1_10_date, day2_10_date, day3_10_date, day4_10_date, day5_10_date, day6_10_date, day7_10_date, day8_10_date, day9_10_date, day10_10_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)ON DUPLICATE KEY UPDATE day1_10_price=?, day2_10_price=?, day3_10_price=?, day4_10_price=?, day5_10_price=?, day6_10_price_=?, day7_10_price_=?, day8_10_price =?, day9_10_price =?, day10_10_price =?, day1_10_date =?,day2_10_date =?,day3_10_date =?,day4_10_date =?,day5_10_date =?,day6_10_date =?,day7_10_date =?,day8_10_date =?,day9_10_date =?, day10_10_date =?`;
 
 
         let promise = new Promise((resolve,reject)=>{
