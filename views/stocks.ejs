@@ -27,8 +27,21 @@
     <p>감성 분석 결과: <%= stockInfo.sentiment == 1 ? '긍정적입니다. 매수를 추천합니다.' : '부정적입니다. 매수를 추천하지 않습니다.' %></p>
 
     <!-- Add predicted prices -->
-    <p>5일 후 예상가격: <%= stockInfo.dayFivePredictedPrice %>원</p>
-    <p>10일 후 예상가격: <%= stockInfo.dayTenPredictedPrice %>원</p>
+    <% for(let i = 1; i <= 5; i++) { %>
+        <p>여기는 5일치 결과값입니다.</p>
+        <% const dayKey = 'day' + i + '_5PredictedPrice'; %>
+        <% if(stockInfo[dayKey]) { %><br/>
+        <p><%= i %>일 후 예상가격(5일치): <%= stockInfo[dayKey] %>원 </p>
+        <% }%>
+    <% }%>
+
+    <% for(let i = 1; i <= 10; i++) { %>
+        <p>여기는 10일치 결과값입니다.</p>
+        <% const dayKey = 'day' + i + '_10PredictedPrice'; %>
+        <% if(stockInfo[dayKey]) { %><br/>
+        <p><%= i %>일 후 예상가격(10일치): <%= stockInfo[dayKey] %>원 </p>
+        <% }%>
+    <% }%>
 
     <!-- Add favorite status -->
     <% if (stockInfo.isFavorite) { %>
