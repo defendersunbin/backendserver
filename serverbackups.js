@@ -608,12 +608,7 @@ app.post('/getStockInfo', async (req, res) => {
             return  res.json({stockInfo:null});
         }
 
-        const predict5 = {
-            day1_5PredictedPrice : result[0].day1_5_price,
-            day2_5PredictedPrice : result[0].day2_5_price,
-            day3_5PredictedPrice : result[0].day3_5_price,
-            day4_5PredictedPrice : result[0].day4_5_price,
-            day5_5PredictedPrice : result[0].day5_5_price,
+        const predict5_date = {
             day1_5Date : result[0].day1_5_date,
             day2_5Date : result[0].day2_5_date,
             day3_5Date : result[0].day3_5_date,
@@ -621,7 +616,15 @@ app.post('/getStockInfo', async (req, res) => {
             day5_5Date : result[0].day5_5_date,
         }
 
-        const predict10 = {
+        const predict5_price = {
+            day1_5PredictedPrice : result[0].day1_5_price,
+            day2_5PredictedPrice : result[0].day2_5_price,
+            day3_5PredictedPrice : result[0].day3_5_price,
+            day4_5PredictedPrice : result[0].day4_5_price,
+            day5_5PredictedPrice : result[0].day5_5_price,
+        }
+
+        const predict10_price = {
             day1_10PredictedPrice : result[0].day1_10_price,
             day2_10PredictedPrice : result[0].day2_10_price,
             day3_10PredictedPrice : result[0].day3_10_price,
@@ -632,6 +635,9 @@ app.post('/getStockInfo', async (req, res) => {
             day8_10PredictedPrice : result[0].day8_10_price,
             day9_10PredictedPrice : result[0].day9_10_price,
             day10_10PredictedPrice : result[0].day10_10_price,
+        }
+
+        const predict10_date = {
             day1_10Date : result[0].day1_10_date,
             day2_10Date : result[0].day2_10_date,
             day3_10Date : result[0].day3_10_date,
@@ -719,39 +725,39 @@ app.post('/getStockInfo', async (req, res) => {
                     sentiment:sentiment,
                     isFavorite:isFavorite,
                     // 5일치 예측 가격
-                    day1_5PredictedPrice: predict5.day1_5PredictedPrice,
-                    day2_5PredictedPrice: predict5.day2_5PredictedPrice,
-                    day3_5PredictedPrice: predict5.day3_5PredictedPrice,
-                    day4_5PredictedPrice: predict5.day4_5PredictedPrice,
-                    day5_5PredictedPrice: predict5.day5_5PredictedPrice,
+                    day1_5PredictedPrice: predict5_price.day1_5PredictedPrice,
+                    day2_5PredictedPrice: predict5_price.day2_5PredictedPrice,
+                    day3_5PredictedPrice: predict5_price.day3_5PredictedPrice,
+                    day4_5PredictedPrice: predict5_price.day4_5PredictedPrice,
+                    day5_5PredictedPrice: predict5_price.day5_5PredictedPrice,
                     //10일치 예측 가격
-                    day1_10PredictedPrice: predict10.day1_10PredictedPrice,
-                    day2_10PredictedPrice: predict10.day2_10PredictedPrice,
-                    day3_10PredictedPrice: predict10.day3_10PredictedPrice,
-                    day4_10PredictedPrice: predict10.day4_10PredictedPrice,
-                    day5_10PredictedPrice: predict10.day5_10PredictedPrice,
-                    day6_10PredictedPrice: predict10.day6_10PredictedPrice,
-                    day7_10PredictedPrice: predict10.day7_10PredictedPrice,
-                    day8_10PredictedPrice: predict10.day8_10PredictedPrice,
-                    day9_10PredictedPrice: predict10.day9_10PredictedPrice,
-                    day10_10PredictedPrice: predict10.day10_10PredictedPrice,
+                    day1_10PredictedPrice: predict10_price.day1_10PredictedPrice,
+                    day2_10PredictedPrice: predict10_price.day2_10PredictedPrice,
+                    day3_10PredictedPrice: predict10_price.day3_10PredictedPrice,
+                    day4_10PredictedPrice: predict10_price.day4_10PredictedPrice,
+                    day5_10PredictedPrice: predict10_price.day5_10PredictedPrice,
+                    day6_10PredictedPrice: predict10_price.day6_10PredictedPrice,
+                    day7_10PredictedPrice: predict10_price.day7_10PredictedPrice,
+                    day8_10PredictedPrice: predict10_price.day8_10PredictedPrice,
+                    day9_10PredictedPrice: predict10_price.day9_10PredictedPrice,
+                    day10_10PredictedPrice: predict10_price.day10_10PredictedPrice,
                     //5일치 날짜
-                    day1_5Date: predict5.day1_5Date,
-                    day2_5Date: predict5.day2_5Date,
-                    day3_5Date: predict5.day3_5Date,
-                    day4_5Date: predict5.day4_5Date,
-                    day5_5Date: predict5.day5_5Date,
+                    day1_5Date: predict5_date.day1_5Date,
+                    day2_5Date: predict5_date.day2_5Date,
+                    day3_5Date: predict5_date.day3_5Date,
+                    day4_5Date: predict5_date.day4_5Date,
+                    day5_5Date: predict5_date.day5_5Date,
                     //10일치 날짜
-                    day1_10Date: predict10.day1_10Date,
-                    day2_10Date: predict10.day2_10Date,
-                    day3_10Date: predict10.day3_10Date,
-                    day4_10Date: predict10.day4_10Date,
-                    day5_10Date: predict10.day5_10Date,
-                    day6_10Date: predict10.day6_10Date,
-                    day7_10Date: predict10.day7_10Date,
-                    day8_10Date: predict10.day8_10Date,
-                    day9_10Date: predict10.day9_10Date,
-                    day10_10Date: predict10.day10_10Date,
+                    day1_10Date: predict10_date.day1_10Date,
+                    day2_10Date: predict10_date.day2_10Date,
+                    day3_10Date: predict10_date.day3_10Date,
+                    day4_10Date: predict10_date.day4_10Date,
+                    day5_10Date: predict10_date.day5_10Date,
+                    day6_10Date: predict10_date.day6_10Date,
+                    day7_10Date: predict10_date.day7_10Date,
+                    day8_10Date: predict10_date.day8_10Date,
+                    day9_10Date: predict10_date.day9_10Date,
+                    day10_10Date: predict10_date.day10_10Date,
                 };
 
                 return res.json({stockInfo : stockInfo});
@@ -775,8 +781,8 @@ app.post('/getStockInfo', async (req, res) => {
                     "magazineUrl" : magazineUrl,
                     "economistUrl" : economistUrl,
                     "sentiment": sentiment,
-                    "predict5": predict5,
-                    "predict10": predict10
+                    "predict5_date": predict5_date,
+                    "predict10_price": predict10_price
                 }
 
                 return res.json(responseBody);
