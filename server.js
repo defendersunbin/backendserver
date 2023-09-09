@@ -797,7 +797,7 @@ async function getMainStocks() {
             mainstocksInfo.push({
                 name:index.name,
                 value:'Saved to CSV',
-                csvUrl:`https://c099-39-118-146-59.ngrok-free.app/download/${index.name}_data.csv`
+                csvUrl:`https://7af2-39-118-146-59.ngrok-free.app/download/${index.name}_data.csv`
                 // Replace "your-server-url" with your actual server's url.
                 // This url will directly download the corresponding file when accessed.
 
@@ -918,7 +918,7 @@ app.post('/sentiment', async (req, res) => {
     for (let stock in jsonData) {
         let sentiment = jsonData[stock];
 
-        const sqlQuery = `INSERT INTO stocks (stockName, sentiment) VALUES (?, ?) ON DUPLICATE KEY UPDATE stockName=values(stockCode), sentiment=?`;
+        const sqlQuery = `INSERT INTO stocks (stockName, sentiment) VALUES (?, ?) ON DUPLICATE KEY UPDATE sentiment=?`;
 
         let promise = new Promise((resolve, reject) => {
             connection.query(sqlQuery, [stock, sentiment, sentiment], function(err){
@@ -990,7 +990,7 @@ app.post('/day_five', async (req, res) => {
     for (let stock in jsonData) {
         let dayFiveValue = jsonData[stock];
 
-        const sqlQuery = `INSERT INTO stocks (stockName, day1_5_price, day1_5_date, day2_5_price, day2_5_date, day3_5_price, day3_5_date,  day4_5_price, day4_5_date, day5_5_price, day5_5_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE stockName=values(stockCode), day1_5_price=?, day1_5_date=?, day2_5_price=?, day2_5_date=?, day3_5_price=?, day3_5_date=?, day4_5_price=?, day4_5_date=?, day5_5_price=?, day5_5_date=?`;
+        const sqlQuery = `INSERT INTO stocks (stockName, day1_5_price, day1_5_date, day2_5_price, day2_5_date, day3_5_price, day3_5_date,  day4_5_price, day4_5_date, day5_5_price, day5_5_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE day1_5_price=?, day1_5_date=?, day2_5_price=?, day2_5_date=?, day3_5_price=?, day3_5_date=?, day4_5_price=?, day4_5_date=?, day5_5_price=?, day5_5_date=?`;
 
         let promise = new Promise((resolve, reject) => {
 
@@ -1069,7 +1069,7 @@ app.post('/day_ten', async (req, res) => {
 
         console.log(`Processing data for ${stockName}:`, dayTenData);
 
-        const sqlQuery = `INSERT INTO stocks (stockName, day1_10_price, day1_10_date, day2_10_price, day2_10_date, day3_10_price, day3_10_date,  day4_10_price, day4_10_date, day5_10_price, day5_10_date, day6_10_price, day6_10_date, day7_10_price, day7_10_date, day8_10_price, day8_10_date, day9_10_price, day9_10_date, day10_10_price, day10_10_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)ON DUPLICATE KEY UPDATE stockName=values(stockCode), day1_10_price=?, day1_10_date=?, day2_10_price=?, day2_10_date=?, day3_10_price=?, day3_10_date=?, day4_10_price=?, day4_10_date=?, day5_10_price=?, day5_10_date=?, day6_10_price=?, day6_10_date=?, day7_10_price=?, day7_10_date=?, day8_10_price=?, day8_10_date=?, day9_10_price=?, day9_10_date=?, day10_10_price=?, day10_10_date=? `;
+        const sqlQuery = `INSERT INTO stocks (stockName, day1_10_price, day1_10_date, day2_10_price, day2_10_date, day3_10_price, day3_10_date,  day4_10_price, day4_10_date, day5_10_price, day5_10_date, day6_10_price, day6_10_date, day7_10_price, day7_10_date, day8_10_price, day8_10_date, day9_10_price, day9_10_date, day10_10_price, day10_10_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)ON DUPLICATE KEY UPDATE day1_10_price=?, day1_10_date=?, day2_10_price=?, day2_10_date=?, day3_10_price=?, day3_10_date=?, day4_10_price=?, day4_10_date=?, day5_10_price=?, day5_10_date=?, day6_10_price=?, day6_10_date=?, day7_10_price=?, day7_10_date=?, day8_10_price=?, day8_10_date=?, day9_10_price=?, day9_10_date=?, day10_10_price=?, day10_10_date=? `;
 
 
         let promise = new Promise((resolve,reject)=>{
