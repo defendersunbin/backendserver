@@ -944,7 +944,7 @@ app.post('/sentiment', async (req, res) => {
     }
 });
 
-
+//5일치 주가예측 감성분석 결과
 app.get('/day_five', async (req, res) => {
     const stockName = req.query.stockName;  // URL 쿼리 파라미터에서 주식 이름 가져오기
 
@@ -982,7 +982,7 @@ app.get('/day_five', async (req, res) => {
     });
 });
 
-
+//5일치 주가 예측 가격 SQL 삽입
 app.post('/day_five', async (req, res) => {
     let jsonData = req.body.day_five;
     let promises = [];
