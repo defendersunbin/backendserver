@@ -797,7 +797,8 @@ async function getMainStocks() {
             mainstocksInfo.push({
                 name:index.name,
                 value:'Saved to CSV',
-                csvUrl:`https://095c-218-55-7-205.ngrok-free.app/download/${index.name}_data.csv`
+                csvUrl:`https://095c-218-55-7-205.ngrok-free.app/download/${index.name}_data.csv`,
+                csvUrl:`https://93e5-117-16-40-139.ngrok-free.app/download/${index.name}_data.csv`
                 // Replace "your-server-url" with your actual server's url.
                 // This url will directly download the corresponding file when accessed.
 
@@ -944,7 +945,7 @@ app.post('/sentiment', async (req, res) => {
     }
 });
 
-
+//5일치 주가예측 감성분석 결과
 app.get('/day_five', async (req, res) => {
     const stockName = req.query.stockName;  // URL 쿼리 파라미터에서 주식 이름 가져오기
 
@@ -982,7 +983,7 @@ app.get('/day_five', async (req, res) => {
     });
 });
 
-
+//5일치 주가 예측 가격 SQL 삽입
 app.post('/day_five', async (req, res) => {
     let jsonData = req.body.day_five;
     let promises = [];
